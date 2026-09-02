@@ -1,38 +1,53 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Building2, Mail, Lock, User, Phone, MapPin, BadgeCheck, ChevronRight, AlertCircle } from 'lucide-react';
+import {
+  Heart, Building2, Mail, Lock, User, Phone, MapPin, BadgeCheck,
+  ChevronRight, AlertCircle, Sparkles, Droplet, ShieldCheck, Check
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { BLOOD_GROUPS, ORGAN_TYPES, CITIES, CITY_COORDS } from '@/lib/constants';
+import { mockDonors, mockHospitals } from '@/lib/mockData';
 
 export default function AuthPage() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, loginAsDemo } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [role, setRole] = useState<'individual' | 'hospital'>('individual');
+  const initialMode = (searchParams.get('mode') as 'login' | 'signup') || 'login';
+  const initialRole = (searchParams.get('role') as 'individual' | 'hospital') || 'individual';
+
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
+  const [role, setRole] = useState<'individual' | 'hospital'>(initialRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Individual fields
+  // Individual signup fields
   const [fullName, setFullName] = useState('');
-  const [age, setAge] = useState('');
-  const [bloodGroup, setBloodGroup] = useState('O-');
+  const [age, setAge] = useState('28');
+  const [bloodGroup, setBloodGroup] = useState('O+');
   const [city, setCity] = useState('Mumbai');
-  const [phone, setPhone] = useState('');
-  const [organs, setOrgans] = useState<string[]>([]);
-  const [emergencyContact, setEmergencyContact] = useState('');
-  const [consent, setConsent] = useState(false);
+  const [phone, setPhone] = useState('9876543210');
+  const [organs, setOrgans] = useState<string[]>(['Kidney', 'Liver', 'Cornea']);
+  const [emergencyContact, setEmergencyContact] = useState('9876543211');
+  const [consent, setConsent] = useState(true);
 
-  // Hospital fields
+  // Hospital signup fields
   const [hospitalName, setHospitalName] = useState('');
   const [registrationId, setRegistrationId] = useState('');
   const [address, setAddress] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [hospitalPhone, setHospitalPhone] = useState('');
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState(true);
+
+  useEffect(() => {
+    const urlMode = searchParams.get('mode');
+    const urlRole = searchParams.get('role');
+    if (urlMode === 'login' || urlMode === 'signup') setMode(urlMode);
+    if (urlRole === 'individual' || urlRole === 'hospital') setRole(urlRole);
+  }, [searchParams]);
 
   function toggleOrgan(organ: string) {
     setOrgans((prev) =>
@@ -54,12 +69,12 @@ export default function AuthPage() {
       }
       navigate('/dashboard');
     } else {
-      const coords = CITY_COORDS[city] || { lat: 0, lng: 0 };
+      const coords = CITY_COORDS[city] || { lat: 19.0760, lng: 72.8777 };
 
       if (role === 'individual') {
         const { error: signUpError } = await signUp(email, password, role, {
-          full_name: fullName,
-          age: parseInt(age) || 0,
+          full_name: fullName || 'New Donor',
+          age: parseInt(age) || 25,
           blood_group: bloodGroup,
           city,
           phone,
@@ -80,10 +95,11 @@ export default function AuthPage() {
           setLoading(false);
           return;
         }
+        navigate('/dashboard');
       } else {
         const { error: signUpError } = await signUp(email, password, role, {
-          hospital_name: hospitalName,
-          registration_id: registrationId,
+          hospital_name: hospitalName || 'New Hospital',
+          registration_id: registrationId || 'REG-MH-999',
           city,
           address,
           contact_person: contactPerson,
@@ -91,94 +107,159 @@ export default function AuthPage() {
           verified,
           lat: coords.lat + (Math.random() - 0.5) * 0.05,
           lng: coords.lng + (Math.random() - 0.5) * 0.05,
-          inventory: {},
+          inventory: {
+            'O+': 8,
+            'O-': 4,
+            'A+': 6,
+            'B+': 5,
+            'Kidney': 2,
+            'Liver': 1,
+          },
         });
         if (signUpError) {
           setError(signUpError);
           setLoading(false);
           return;
         }
+        navigate('/hospital-dashboard');
       }
-
-      navigate('/dashboard');
     }
 
     setLoading(false);
   }
 
-  const inputClass = 'w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all';
+  const inputClass = 'w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 transition-all text-sm font-medium';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-red-50/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-red-50/30 flex items-center justify-center p-4 sm:p-6">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-2xl"
       >
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-8 py-6">
-            <Link to="/" className="flex items-center gap-2 text-white mb-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <Heart className="w-5 h-5 text-white" fill="white" />
+          <div className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 px-8 py-7 text-white">
+            <Link to="/" className="inline-flex items-center gap-2.5 text-white mb-3 hover:opacity-90 transition-opacity">
+              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+                <Heart className="w-4 h-4 text-white" fill="white" />
               </div>
-              <span className="text-xl font-bold">LifeLink</span>
+              <span className="text-xl font-black">LifeLink</span>
             </Link>
-            <h1 className="text-2xl font-bold text-white">
-              {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+            <h1 className="text-2xl sm:text-3xl font-black">
+              {mode === 'login' ? 'Welcome Back' : 'Join the LifeLink Network'}
             </h1>
-            <p className="text-primary-100 text-sm mt-1">
-              {mode === 'login' ? 'Sign in to your donor or hospital account' : 'Join the network connecting lives'}
+            <p className="text-primary-100 text-xs sm:text-sm mt-1">
+              {mode === 'login'
+                ? 'Sign in to your donor or hospital account to continue'
+                : 'Connect with local hospitals, donors, and recipients in emergencies'}
             </p>
           </div>
 
-          <div className="p-8">
-            {/* Mode toggle */}
-            <div className="flex gap-2 mb-6 p-1 bg-slate-100 rounded-xl">
+          <div className="p-6 sm:p-8">
+            {/* Quick 1-Click Demo Accounts Banner */}
+            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary-50 via-slate-50 to-teal-50 border border-slate-200/80">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary-600" />
+                  Instant 1-Click Demo Accounts
+                </span>
+                <span className="text-[10px] text-slate-400">No typing needed</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    loginAsDemo('individual', 'donor_1');
+                    navigate('/dashboard');
+                  }}
+                  className="p-2.5 bg-white hover:bg-primary-50 rounded-xl border border-slate-200 text-left transition-all text-xs"
+                >
+                  <p className="font-bold text-slate-900 flex items-center gap-1">
+                    <Droplet className="w-3.5 h-3.5 text-primary-600" /> Rajesh (O+)
+                  </p>
+                  <p className="text-[10px] text-slate-500">Silver Donor · Mumbai</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    loginAsDemo('individual', 'donor_4');
+                    navigate('/dashboard');
+                  }}
+                  className="p-2.5 bg-white hover:bg-teal-50 rounded-xl border border-slate-200 text-left transition-all text-xs"
+                >
+                  <p className="font-bold text-slate-900 flex items-center gap-1">
+                    <Heart className="w-3.5 h-3.5 text-teal-600" /> Neha (O-)
+                  </p>
+                  <p className="text-[10px] text-slate-500">Platinum · Bangalore</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    loginAsDemo('hospital', 'hospital_1');
+                    navigate('/hospital-dashboard');
+                  }}
+                  className="p-2.5 bg-white hover:bg-primary-50 rounded-xl border border-slate-200 text-left transition-all text-xs"
+                >
+                  <p className="font-bold text-slate-900 flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5 text-primary-600" /> Apollo Hospital
+                  </p>
+                  <p className="text-[10px] text-slate-500">Mumbai · Verified</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Mode toggle (Login / Signup) */}
+            <div className="flex gap-2 mb-6 p-1.5 bg-slate-100 rounded-2xl">
               <button
+                type="button"
                 onClick={() => setMode('login')}
-                className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  mode === 'login' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'
+                className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                  mode === 'login' ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                Login
+                Sign In
               </button>
               <button
+                type="button"
                 onClick={() => setMode('signup')}
-                className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  mode === 'signup' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'
+                className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                  mode === 'signup' ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                Sign Up
+                Register
               </button>
             </div>
 
-            {/* Role toggle */}
+            {/* Role toggle (Individual / Hospital) */}
             <div className="flex gap-3 mb-6">
               <button
+                type="button"
                 onClick={() => setRole('individual')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-2xl border-2 transition-all font-bold text-sm ${
                   role === 'individual'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                    ? 'border-primary-600 bg-primary-50/70 text-primary-700 shadow-sm'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                <User className="w-5 h-5" />
-                <span className="font-medium text-sm">Individual</span>
+                <User className="w-4 h-4" />
+                Individual / Donor
               </button>
               <button
+                type="button"
                 onClick={() => setRole('hospital')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-2xl border-2 transition-all font-bold text-sm ${
                   role === 'hospital'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                    ? 'border-primary-600 bg-primary-50/70 text-primary-700 shadow-sm'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                <Building2 className="w-5 h-5" />
-                <span className="font-medium text-sm">Hospital</span>
+                <Building2 className="w-4 h-4" />
+                Hospital Center
               </button>
             </div>
 
+            {/* Main Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <AnimatePresence mode="wait">
                 {mode === 'signup' && role === 'individual' && (
@@ -200,6 +281,7 @@ export default function AuthPage() {
                         className={inputClass}
                       />
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="relative">
                         <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -218,22 +300,23 @@ export default function AuthPage() {
                         value={bloodGroup}
                         onChange={(e) => setBloodGroup(e.target.value)}
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                       >
                         {BLOOD_GROUPS.map((bg) => (
-                          <option key={bg} value={bg}>{bg}</option>
+                          <option key={bg} value={bg}>Blood Group: {bg}</option>
                         ))}
                       </select>
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <select
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                       >
                         {CITIES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>City: {c}</option>
                         ))}
                       </select>
                       <div className="relative">
@@ -248,44 +331,54 @@ export default function AuthPage() {
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-600 mb-2">Organs willing to donate</label>
+
+                    {/* Organs willing to donate multi-select */}
+                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                      <label className="block text-xs font-bold text-slate-700 mb-2">
+                        Organs Willing to Donate (Posthumous Pledge)
+                      </label>
                       <div className="flex flex-wrap gap-2">
-                        {ORGAN_TYPES.map((organ) => (
-                          <button
-                            key={organ}
-                            type="button"
-                            onClick={() => toggleOrgan(organ)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                              organs.includes(organ)
-                                ? 'bg-primary-500 text-white'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            {organ}
-                          </button>
-                        ))}
+                        {ORGAN_TYPES.map((organ) => {
+                          const active = organs.includes(organ);
+                          return (
+                            <button
+                              key={organ}
+                              type="button"
+                              onClick={() => toggleOrgan(organ)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                active
+                                  ? 'bg-primary-600 text-white shadow-sm'
+                                  : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              {active && <Check className="w-3.5 h-3.5" />}
+                              {organ}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
+
                     <div className="relative">
                       <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Emergency Contact"
+                        placeholder="Emergency Contact Phone"
                         value={emergencyContact}
                         onChange={(e) => setEmergencyContact(e.target.value)}
                         className={inputClass}
                       />
                     </div>
-                    <label className="flex items-start gap-3 cursor-pointer">
+
+                    <label className="flex items-start gap-3 p-3 bg-primary-50/50 rounded-2xl border border-primary-100 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={consent}
                         onChange={(e) => setConsent(e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                        className="mt-0.5 w-4 h-4 rounded text-primary-600 focus:ring-primary-500"
                       />
-                      <span className="text-sm text-slate-600">
-                        I consent to posthumous organ donation. I understand my organs may be used to save lives after my death.
+                      <span className="text-xs text-slate-700 leading-relaxed font-medium">
+                        I hereby pledge to donate my chosen organs posthumously for transplantation. I understand this helps save lives after brain/cardiac death.
                       </span>
                     </label>
                   </motion.div>
@@ -303,13 +396,14 @@ export default function AuthPage() {
                       <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Hospital Name"
+                        placeholder="Hospital Name (e.g. Fortis Healthcare)"
                         value={hospitalName}
                         onChange={(e) => setHospitalName(e.target.value)}
                         required
                         className={inputClass}
                       />
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="relative">
                         <BadgeCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -326,30 +420,32 @@ export default function AuthPage() {
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/40"
                       >
                         {CITIES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>City: {c}</option>
                         ))}
                       </select>
                     </div>
+
                     <div className="relative">
                       <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Address"
+                        placeholder="Complete Street Address"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         required
                         className={inputClass}
                       />
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="relative">
                         <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         <input
                           type="text"
-                          placeholder="Contact Person"
+                          placeholder="Contact Person / Head"
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           required
@@ -360,7 +456,7 @@ export default function AuthPage() {
                         <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         <input
                           type="tel"
-                          placeholder="Phone"
+                          placeholder="Emergency Phone"
                           value={hospitalPhone}
                           onChange={(e) => setHospitalPhone(e.target.value)}
                           required
@@ -368,38 +464,41 @@ export default function AuthPage() {
                         />
                       </div>
                     </div>
-                    <label className="flex items-center gap-3 cursor-pointer">
+
+                    <label className="flex items-center gap-3 p-3 bg-teal-50 rounded-2xl border border-teal-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={verified}
                         onChange={(e) => setVerified(e.target.checked)}
-                        className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                        className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500"
                       />
-                      <span className="text-sm text-slate-600">
-                        Mock verification toggle (for demo purposes)
+                      <span className="text-xs text-teal-900 font-bold flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-teal-600" />
+                        Pre-verified medical license badge (Demo mode enabled)
                       </span>
                     </label>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Common fields */}
+              {/* Common Credentials */}
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Official Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className={inputClass}
                 />
               </div>
+
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="password"
-                  placeholder="Password"
+                  placeholder="Password (min 6 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -409,7 +508,7 @@ export default function AuthPage() {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 text-sm text-primary-600 bg-primary-50 px-4 py-3 rounded-xl">
+                <div className="flex items-center gap-2.5 text-xs font-semibold text-primary-700 bg-primary-50 border border-primary-200 p-3.5 rounded-2xl">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {error}
                 </div>
@@ -418,18 +517,12 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-primary-600/20 disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-2xl transition-all shadow-xl shadow-primary-600/25 disabled:opacity-60 text-base"
               >
-                {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+                {loading ? 'Authenticating with Firebase...' : mode === 'login' ? 'Sign In' : 'Create Account'}
                 <ChevronRight className="w-5 h-5" />
               </button>
             </form>
-
-            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-xs text-slate-400">
-                Demo: Sign up with any email/password to create an account, or use a seeded hospital email like <span className="font-medium text-slate-500">apollo.mumbai@lifelink.demo</span>
-              </p>
-            </div>
           </div>
         </div>
       </motion.div>

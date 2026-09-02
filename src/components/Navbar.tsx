@@ -1,13 +1,18 @@
-import { Link, useNavigate } from 'react-router-dom';
+﻿import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Heart, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
+import {
+  Heart, Menu, X, LogOut, LayoutDashboard, Siren, ShieldCheck,
+  User, Building2, Droplet, Sparkles, BarChart3, MapPin, ChevronDown
+} from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
-  const { session, profile, signOut } = useAuth();
+  const { session, profile, donor, hospital, signOut, loginAsDemo } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [demoMenuOpen, setDemoMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -20,135 +25,459 @@ export default function Navbar() {
     return '/dashboard';
   };
 
+  const isIndividual = profile?.role === 'individual';
+  const isHospital = profile?.role === 'hospital';
+
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-md border-b-4 border-primary-600">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo & Brand */}
+          {/* Left Corner: Logo & Name */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="bg-gradient-to-br from-primary-600 to-primary-700 p-2.5 rounded-lg transform group-hover:scale-110 transition-transform">
-              <Heart className="w-6 h-6 text-white" fill="white" />
+            <div className="relative">
+              <div className="w-11 h-11 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 rounded-xl flex items-center justify-center shadow-md shadow-primary-600/30 group-hover:scale-105 transition-transform">
+                <Heart className="w-6 h-6 text-white" fill="white" />
+              </div>
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-teal-500 rounded-full border-2 border-white animate-pulse" />
             </div>
-            <div className="hidden sm:block">
-              <h1 className="font-bold text-2xl bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
-                LifeLink
-              </h1>
-              <p className="text-xs text-gray-600 -mt-1">Connecting Lives</p>
+            <div>
+              <span className="font-extrabold text-2xl tracking-tight text-slate-900 flex items-center gap-1">
+                Life<span className="text-primary-600">Link</span>
+              </span>
+              <p className="text-[11px] font-medium text-slate-500 -mt-1 tracking-wider uppercase">
+                City Blood & Organ Network
+              </p>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Center Navigation for Logged-in Role */}
+          {session && (
+            <nav className="hidden lg:flex items-center gap-1">
+              {isIndividual && (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      location.pathname === '/dashboard'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/organ-pledge"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/organ-pledge'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Heart className="w-4 h-4 text-primary-600" />
+                    Pledge Organ
+                  </Link>
+                  <Link
+                    to="/recommendations"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/recommendations'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    AI Insights
+                  </Link>
+                  <Link
+                    to="/reports"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/reports'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <BarChart3 className="w-4 h-4 text-teal-600" />
+                    Reports
+                  </Link>
+                </>
+              )}
+
+              {isHospital && (
+                <>
+                  <Link
+                    to="/hospital-dashboard"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      location.pathname === '/hospital-dashboard'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/nearby-hospitals"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/nearby-hospitals'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4 text-teal-600" />
+                    Nearby Hospitals
+                  </Link>
+                  <Link
+                    to="/transparency"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/transparency'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-teal-600" />
+                    Transparency Log
+                  </Link>
+                  <Link
+                    to="/reports"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/reports'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <BarChart3 className="w-4 h-4 text-blue-600" />
+                    Reports
+                  </Link>
+                </>
+              )}
+            </nav>
+          )}
+
+          {/* Right Corner: Navigation / Auth Actions */}
+          <div className="hidden md:flex items-center gap-3">
             {!session ? (
               <>
+                {/* Demo Quick Switcher */}
+                <div className="relative">
+                  <button
+                    onClick={() => setDemoMenuOpen(!demoMenuOpen)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all border border-slate-200"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-primary-600" />
+                    Quick Demo Switcher
+                    <ChevronDown className="w-3 h-3 text-slate-500" />
+                  </button>
+
+                  <AnimatePresence>
+                    {demoMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 text-left"
+                      >
+                        <p className="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          1-Click Demo Logins
+                        </p>
+                        <button
+                          onClick={() => {
+                            loginAsDemo('individual', 'donor_1');
+                            setDemoMenuOpen(false);
+                            navigate('/dashboard');
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-primary-50 rounded-xl transition-all"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Droplet className="w-4 h-4 text-primary-600" />
+                            <div>
+                              <p className="text-xs font-bold text-slate-800">Rajesh Kumar (O+)</p>
+                              <p className="text-[10px] text-slate-500">Silver Donor · Mumbai</p>
+                            </div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            loginAsDemo('individual', 'donor_4');
+                            setDemoMenuOpen(false);
+                            navigate('/dashboard');
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-primary-50 rounded-xl transition-all"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Heart className="w-4 h-4 text-teal-600" />
+                            <div>
+                              <p className="text-xs font-bold text-slate-800">Neha Singh (O-)</p>
+                              <p className="text-[10px] text-slate-500">Platinum Lifesaver · Bangalore</p>
+                            </div>
+                          </div>
+                        </button>
+                        <div className="h-px bg-slate-100 my-1" />
+                        <button
+                          onClick={() => {
+                            loginAsDemo('hospital', 'hospital_1');
+                            setDemoMenuOpen(false);
+                            navigate('/hospital-dashboard');
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-xl transition-all"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-primary-600" />
+                            <div>
+                              <p className="text-xs font-bold text-slate-800">Apollo Hospital</p>
+                              <p className="text-[10px] text-slate-500">Mumbai · Verified</p>
+                            </div>
+                          </div>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Login & Sign Up Options */}
                 <Link
                   to="/auth?mode=signup&role=individual"
-                  className="px-4 py-2.5 rounded-lg font-semibold text-primary-600 hover:bg-primary-50 transition-colors"
+                  className="px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:text-primary-600 hover:bg-primary-50 transition-colors"
                 >
                   Register Donor
                 </Link>
+
                 <Link
                   to="/auth?mode=signup&role=hospital"
-                  className="px-4 py-2.5 rounded-lg font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                  className="px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:text-primary-600 hover:bg-slate-100 transition-colors"
                 >
-                  Hospital Login
+                  Hospital Access
                 </Link>
+
                 <Link
                   to="/auth?mode=login"
-                  className="px-4 py-2.5 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-md shadow-primary-600/20 transition-all transform hover:-translate-y-0.5"
                 >
-                  Login
+                  Login / Sign Up
                 </Link>
               </>
             ) : (
               <>
+                {/* Hospital Emergency Pulse Button */}
+                {isHospital && (
+                  <Link
+                    to="/create-request"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-primary-600 to-red-700 shadow-lg shadow-primary-600/30 hover:scale-105 transition-all animate-pulse"
+                  >
+                    <Siren className="w-4 h-4" />
+                    EMERGENCY REQUEST
+                  </Link>
+                )}
+
+                {/* Profile Pill */}
                 <Link
                   to={getDashboardLink()}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors"
                 >
-                  <LayoutDashboard className="w-5 h-5" />
-                  Dashboard
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-xs font-bold">
+                    {donor ? donor.full_name[0] : hospital ? hospital.hospital_name[0] : 'U'}
+                  </div>
+                  <div className="text-left hidden xl:block">
+                    <p className="text-xs font-bold text-slate-800 leading-tight">
+                      {donor ? donor.full_name.split(' ')[0] : hospital ? hospital.hospital_name.split(' ')[0] : 'User'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 capitalize">
+                      {profile?.role || 'Member'}
+                    </p>
+                  </div>
                 </Link>
+
+                {/* Logout Button */}
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                  title="Sign Out"
+                  className="p-2.5 rounded-xl text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors"
                 >
                   <LogOut className="w-5 h-5" />
-                  Logout
                 </button>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {isOpen ? (
-              <X className="w-6 h-6 text-gray-700" />
-            ) : (
-              <Menu className="w-6 h-6 text-gray-700" />
+          {/* Mobile Menu Toggle */}
+          <div className="flex items-center gap-2 md:hidden">
+            {isHospital && (
+              <Link
+                to="/create-request"
+                className="p-2 bg-primary-600 text-white rounded-lg animate-pulse"
+                title="Emergency"
+              >
+                <Siren className="w-5 h-5" />
+              </Link>
             )}
-          </button>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2.5 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Drawer */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-gray-200"
+              className="md:hidden border-t border-slate-200 bg-white py-4 space-y-3"
             >
-              <div className="px-4 py-4 space-y-3">
-                {!session ? (
-                  <>
-                    <Link
-                      to="/auth?mode=signup&role=individual"
-                      onClick={() => setIsOpen(false)}
-                      className="block w-full px-4 py-2.5 rounded-lg font-semibold text-primary-600 hover:bg-primary-50 transition-colors text-center"
-                    >
-                      Register Donor
-                    </Link>
-                    <Link
-                      to="/auth?mode=signup&role=hospital"
-                      onClick={() => setIsOpen(false)}
-                      className="block w-full px-4 py-2.5 rounded-lg font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-colors text-center"
-                    >
-                      Hospital Login
-                    </Link>
-                    <Link
-                      to="/auth?mode=login"
-                      onClick={() => setIsOpen(false)}
-                      className="block w-full px-4 py-2.5 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors text-center"
-                    >
-                      Login
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to={getDashboardLink()}
-                      onClick={() => setIsOpen(false)}
-                      className="block w-full px-4 py-2.5 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-colors text-center"
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-4 py-2.5 rounded-lg font-semibold text-white bg-primary-600 hover:bg-primary-700 transition-colors text-center"
-                    >
-                      Logout
-                    </button>
-                  </>
-                )}
-              </div>
+              {!session ? (
+                <div className="space-y-2">
+                  <div className="p-3 bg-slate-50 rounded-xl mb-3">
+                    <p className="text-xs font-bold text-slate-500 mb-2">TRY INSTANT DEMO:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          loginAsDemo('individual', 'donor_1');
+                          setIsOpen(false);
+                          navigate('/dashboard');
+                        }}
+                        className="p-2 bg-white rounded-lg text-xs font-bold text-slate-800 border border-slate-200 text-center"
+                      >
+                        🩸 Donor Demo
+                      </button>
+                      <button
+                        onClick={() => {
+                          loginAsDemo('hospital', 'hospital_1');
+                          setIsOpen(false);
+                          navigate('/hospital-dashboard');
+                        }}
+                        className="p-2 bg-white rounded-lg text-xs font-bold text-slate-800 border border-slate-200 text-center"
+                      >
+                        🏥 Hospital Demo
+                      </button>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/auth?mode=signup&role=individual"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full py-3 px-4 rounded-xl font-semibold text-sm text-slate-800 hover:bg-slate-50 text-center border border-slate-200"
+                  >
+                    Register as Donor
+                  </Link>
+                  <Link
+                    to="/auth?mode=signup&role=hospital"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full py-3 px-4 rounded-xl font-semibold text-sm text-slate-800 hover:bg-slate-50 text-center border border-slate-200"
+                  >
+                    Hospital Sign Up
+                  </Link>
+                  <Link
+                    to="/auth?mode=login"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-primary-600 hover:bg-primary-700 text-center shadow-md shadow-primary-600/20"
+                  >
+                    Login / Sign In
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <div className="px-3 py-2 bg-slate-50 rounded-xl mb-2 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center font-bold text-sm">
+                      {donor ? donor.full_name[0] : hospital ? hospital.hospital_name[0] : 'U'}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">
+                        {donor ? donor.full_name : hospital ? hospital.hospital_name : 'User'}
+                      </p>
+                      <p className="text-[10px] text-slate-500 capitalize">{profile?.role}</p>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={getDashboardLink()}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-primary-600" />
+                    Dashboard
+                  </Link>
+
+                  {isIndividual && (
+                    <>
+                      <Link
+                        to="/organ-pledge"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <Heart className="w-4 h-4 text-primary-600" />
+                        Pledge Organs
+                      </Link>
+                      <Link
+                        to="/recommendations"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        AI Recommendations
+                      </Link>
+                      <Link
+                        to="/reports"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <BarChart3 className="w-4 h-4 text-teal-600" />
+                        Reports
+                      </Link>
+                    </>
+                  )}
+
+                  {isHospital && (
+                    <>
+                      <Link
+                        to="/create-request"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-primary-600 bg-primary-50"
+                      >
+                        <Siren className="w-4 h-4" />
+                        Create Emergency Request
+                      </Link>
+                      <Link
+                        to="/nearby-hospitals"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <MapPin className="w-4 h-4 text-teal-600" />
+                        Nearby Hospitals
+                      </Link>
+                      <Link
+                        to="/transparency"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-teal-600" />
+                        Transparency Log
+                      </Link>
+                      <Link
+                        to="/reports"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <BarChart3 className="w-4 h-4 text-blue-600" />
+                        Reports
+                      </Link>
+                    </>
+                  )}
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl mt-3 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </nav>
+    </header>
   );
 }

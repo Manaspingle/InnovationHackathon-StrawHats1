@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -13,11 +13,14 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication and get a reference to the service
+// Initialize Firebase Authentication
 export const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence);
+setPersistence(auth, browserLocalPersistence).catch(() => {
+  // Ignore persistence error if browser storage is restricted
+});
 
-// Initialize Cloud Firestore and get a reference to the service
+// Initialize Cloud Firestore
 export const db = getFirestore(app);
+

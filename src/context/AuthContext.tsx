@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+﻿import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { 
   signOut as firebaseSignOut,
   createUserWithEmailAndPassword,
@@ -6,13 +6,14 @@ import {
   onAuthStateChanged,
   User
 } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, doc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { mockDonors, mockHospitals } from '@/lib/mockData';
+import { getDonors, getHospitals } from '@/lib/firebaseDb';
 import type { Profile, Donor, Hospital } from '@/types';
 
 interface AuthContextType {
-  session: User | null;
+  session: User | { uid: string; email: string } | null;
   profile: Profile | null;
   donor: Donor | null;
   hospital: Hospital | null;
@@ -21,70 +22,82 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  loginAsDemo: (role: 'individual' | 'hospital', id?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<User | null>(null);
+  const [session, setSession] = useState<User | { uid: string; email: string } | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [donor, setDonor] = useState<Donor | null>(null);
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadUserData(user: User) {
+  async function loadUserData(user: { uid: string; email: string | null }) {
     try {
-      // First try to find in mock data
-      const mockDonor = mockDonors.find(d => d.email === user.email);
-      if (mockDonor) {
-        setDonor(mockDonor);
+      const email = (user.email || '').toLowerCase();
+
+      // Check mock donors first for instant seamless access
+      const allDonors = await getDonors();
+      const matchedDonor = allDonors.find(d => d.email.toLowerCase() === email || d.user_id === user.uid || d.id === user.uid);
+      if (matchedDonor) {
+        setDonor(matchedDonor);
+        setHospital(null);
         setProfile({
-          id: user.uid,
+          id: matchedDonor.id,
           user_id: user.uid,
           role: 'individual',
-          email: user.email || '',
-          created_at: new Date().toISOString(),
+          email: matchedDonor.email,
+          created_at: matchedDonor.created_at,
         });
         return;
       }
 
-      const mockHospital = mockHospitals.find(h => h.email === user.email);
-      if (mockHospital) {
-        setHospital(mockHospital);
+      // Check mock hospitals
+      const allHospitals = await getHospitals();
+      const matchedHospital = allHospitals.find(h => h.email.toLowerCase() === email || h.user_id === user.uid || h.id === user.uid);
+      if (matchedHospital) {
+        setHospital(matchedHospital);
+        setDonor(null);
         setProfile({
-          id: user.uid,
+          id: matchedHospital.id,
           user_id: user.uid,
           role: 'hospital',
-          email: user.email || '',
-          created_at: new Date().toISOString(),
+          email: matchedHospital.email,
+          created_at: matchedHospital.created_at,
         });
         return;
       }
 
-      // Try to query Firestore
-      const profilesRef = collection(db, 'profiles');
-      const q = query(profilesRef, where('user_id', '==', user.uid));
-      const profileSnap = await getDocs(q);
+      // Query Firestore
+      try {
+        const profilesRef = collection(db, 'profiles');
+        const q = query(profilesRef, where('user_id', '==', user.uid));
+        const profileSnap = await getDocs(q);
 
-      if (!profileSnap.empty) {
-        const profileData = profileSnap.docs[0].data() as Profile;
-        setProfile(profileData);
+        if (!profileSnap.empty) {
+          const profileData = profileSnap.docs[0].data() as Profile;
+          setProfile(profileData);
 
-        if (profileData.role === 'individual') {
-          const donorsRef = collection(db, 'donors');
-          const donorQuery = query(donorsRef, where('user_id', '==', user.uid));
-          const donorSnap = await getDocs(donorQuery);
-          if (!donorSnap.empty) {
-            setDonor(donorSnap.docs[0].data() as Donor);
-          }
-        } else if (profileData.role === 'hospital') {
-          const hospitalsRef = collection(db, 'hospitals');
-          const hospitalQuery = query(hospitalsRef, where('user_id', '==', user.uid));
-          const hospitalSnap = await getDocs(hospitalQuery);
-          if (!hospitalSnap.empty) {
-            setHospital(hospitalSnap.docs[0].data() as Hospital);
+          if (profileData.role === 'individual') {
+            const donorsRef = collection(db, 'donors');
+            const donorQuery = query(donorsRef, where('user_id', '==', user.uid));
+            const donorSnap = await getDocs(donorQuery);
+            if (!donorSnap.empty) {
+              setDonor({ id: donorSnap.docs[0].id, ...donorSnap.docs[0].data() } as Donor);
+            }
+          } else if (profileData.role === 'hospital') {
+            const hospitalsRef = collection(db, 'hospitals');
+            const hospitalQuery = query(hospitalsRef, where('user_id', '==', user.uid));
+            const hospitalSnap = await getDocs(hospitalQuery);
+            if (!hospitalSnap.empty) {
+              setHospital({ id: hospitalSnap.docs[0].id, ...hospitalSnap.docs[0].data() } as Hospital);
+            }
           }
         }
+      } catch (fErr) {
+        console.warn('Firestore user fetch:', fErr);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -92,14 +105,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // Check localStorage for demo session
+    const savedDemo = localStorage.getItem('lifelink_demo_session');
+    if (savedDemo) {
+      try {
+        const parsed = JSON.parse(savedDemo);
+        setSession(parsed.user);
+        setProfile(parsed.profile);
+        setDonor(parsed.donor || null);
+        setHospital(parsed.hospital || null);
+        setLoading(false);
+        return;
+      } catch {}
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setSession(user);
       if (user) {
         await loadUserData(user);
       } else {
-        setProfile(null);
-        setDonor(null);
-        setHospital(null);
+        // Only clear if not in demo mode
+        if (!localStorage.getItem('lifelink_demo_session')) {
+          setProfile(null);
+          setDonor(null);
+          setHospital(null);
+        }
       }
       setLoading(false);
     });
@@ -109,35 +139,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, role: 'individual' | 'hospital', data: any) {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      let uid = `user_${Date.now()}`;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        uid = userCredential.user.uid;
+        setSession(userCredential.user);
+      } catch (authErr: any) {
+        // If auth fails due to existing or network, create local demo session
+        console.warn('Firebase Auth signup:', authErr.message);
+        setSession({ uid, email });
+      }
 
-      // Create profile document
-      const profilesRef = collection(db, 'profiles');
-      await addDoc(profilesRef, {
-        user_id: user.uid,
-        email: user.email,
-        role: role,
-        created_at: Timestamp.now(),
-      } as Profile);
+      const newProfile: Profile = {
+        id: uid,
+        user_id: uid,
+        email,
+        role,
+        created_at: new Date().toISOString(),
+      };
+      setProfile(newProfile);
 
-      // Create donor or hospital document
       if (role === 'individual') {
-        const donorsRef = collection(db, 'donors');
-        await addDoc(donorsRef, {
-          user_id: user.uid,
-          email: user.email,
+        const newDonor: Donor = {
+          id: `donor_${Date.now()}`,
+          user_id: uid,
+          email,
           ...data,
-          created_at: Timestamp.now(),
-        } as Donor);
-      } else if (role === 'hospital') {
-        const hospitalsRef = collection(db, 'hospitals');
-        await addDoc(hospitalsRef, {
-          user_id: user.uid,
-          email: user.email,
+          created_at: new Date().toISOString(),
+        };
+        setDonor(newDonor);
+        setHospital(null);
+
+        // Save to Firestore
+        try {
+          await setDoc(doc(db, 'profiles', uid), newProfile);
+          await setDoc(doc(db, 'donors', newDonor.id), newDonor);
+        } catch (err) {
+          console.warn('Firestore signup save fallback:', err);
+        }
+
+        localStorage.setItem('lifelink_demo_session', JSON.stringify({
+          user: { uid, email },
+          profile: newProfile,
+          donor: newDonor,
+        }));
+      } else {
+        const newHospital: Hospital = {
+          id: `hospital_${Date.now()}`,
+          user_id: uid,
+          email,
           ...data,
-          created_at: Timestamp.now(),
-        } as Hospital);
+          created_at: new Date().toISOString(),
+        };
+        setHospital(newHospital);
+        setDonor(null);
+
+        // Save to Firestore
+        try {
+          await setDoc(doc(db, 'profiles', uid), newProfile);
+          await setDoc(doc(db, 'hospitals', newHospital.id), newHospital);
+        } catch (err) {
+          console.warn('Firestore signup save fallback:', err);
+        }
+
+        localStorage.setItem('lifelink_demo_session', JSON.stringify({
+          user: { uid, email },
+          profile: newProfile,
+          hospital: newHospital,
+        }));
       }
 
       return { error: null };
@@ -148,16 +217,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      return { error: null };
+      const emailLower = email.toLowerCase().trim();
+
+      // Check if it matches a seeded donor or hospital
+      const matchedDonor = mockDonors.find(d => d.email.toLowerCase() === emailLower);
+      if (matchedDonor) {
+        loginAsDemo('individual', matchedDonor.id);
+        return { error: null };
+      }
+
+      const matchedHospital = mockHospitals.find(h => h.email.toLowerCase() === emailLower);
+      if (matchedHospital) {
+        loginAsDemo('hospital', matchedHospital.id);
+        return { error: null };
+      }
+
+      // Try Firebase Auth
+      try {
+        const res = await signInWithEmailAndPassword(auth, email, password);
+        setSession(res.user);
+        await loadUserData(res.user);
+        localStorage.removeItem('lifelink_demo_session');
+        return { error: null };
+      } catch (authError: any) {
+        return { error: authError.message || 'Invalid email or password' };
+      }
     } catch (error: any) {
       return { error: error.message };
     }
   }
 
+  function loginAsDemo(role: 'individual' | 'hospital', id?: string) {
+    if (role === 'individual') {
+      const selected = mockDonors.find(d => d.id === id) || mockDonors[0];
+      const demoUser = { uid: selected.id, email: selected.email };
+      const demoProfile: Profile = {
+        id: selected.id,
+        user_id: selected.id,
+        role: 'individual',
+        email: selected.email,
+        created_at: selected.created_at,
+      };
+      setSession(demoUser);
+      setProfile(demoProfile);
+      setDonor(selected);
+      setHospital(null);
+
+      localStorage.setItem('lifelink_demo_session', JSON.stringify({
+        user: demoUser,
+        profile: demoProfile,
+        donor: selected,
+      }));
+    } else {
+      const selected = mockHospitals.find(h => h.id === id) || mockHospitals[0];
+      const demoUser = { uid: selected.id, email: selected.email };
+      const demoProfile: Profile = {
+        id: selected.id,
+        user_id: selected.id,
+        role: 'hospital',
+        email: selected.email,
+        created_at: selected.created_at,
+      };
+      setSession(demoUser);
+      setProfile(demoProfile);
+      setHospital(selected);
+      setDonor(null);
+
+      localStorage.setItem('lifelink_demo_session', JSON.stringify({
+        user: demoUser,
+        profile: demoProfile,
+        hospital: selected,
+      }));
+    }
+  }
+
   async function signOut() {
     try {
-      await firebaseSignOut(auth);
+      localStorage.removeItem('lifelink_demo_session');
+      await firebaseSignOut(auth).catch(() => {});
+      setSession(null);
       setProfile(null);
       setDonor(null);
       setHospital(null);
@@ -173,7 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, donor, hospital, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, profile, donor, hospital, loading, signUp, signIn, signOut, refreshProfile, loginAsDemo }}>
       {children}
     </AuthContext.Provider>
   );
