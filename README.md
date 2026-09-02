@@ -1,141 +1,318 @@
-# LifeLink
+<div align="center">
 
-City-based **blood and organ allocation** for donors and hospitals: pledges, emergency matching, hospital-to-hospital transfers, and hospital-to-donor connections.
+# 🩸 LifeLink — Blood & Organ Donor Network
 
-![Blood donation](https://images.unsplash.com/photo-1615461066841-6111ee42e8d8?auto=format&fit=crop&w=1400&q=80)
+**Connecting Life, One Match at a Time.**
 
-*A living donation takes under an hour. A posthumous organ pledge can save up to eight people.*
+A city-based platform that connects individual donors and hospitals for real-time, transparent, and priority-driven blood and organ allocation.
 
----
-
-## What it is
-
-LifeLink is a React (Vite + TypeScript) web app. Individuals register as donors, log blood donations, and pledge organs after death. Hospitals raise emergency requests, run matching, dispatch, and **browse who is available today and which organs each person has pledged**.
-
-| Role | What they do |
-|------|----------------|
-| **Individual / donor** | Register, pledge organs, log blood, see AI insights & education, print a **personal** contribution report |
-| **Hospital** | Emergency requests, matching, nearby stock transfers, **donor directory**, hospital request/delivery reports |
+</div>
 
 ---
 
-## Product map
+## Table of Contents
 
-```mermaid
-flowchart LR
-  subgraph Public
-    L[Landing]
-    A[Login / Register]
-  end
-  subgraph Donor
-    D[Dashboard]
-    P[Organ pledge]
-    I[AI insights and blogs]
-    R1[Personal report]
-  end
-  subgraph Hospital
-    H[Hospital dashboard]
-    Dir[Donor directory]
-    N[Nearby hospitals]
-    M[Matching and dispatch]
-    R2[Hospital report]
-  end
-  L --> A
-  A --> D
-  A --> H
-  H --> Dir
-  H --> N
-  H --> M
-  D --> I
-  D --> R1
-  H --> R2
-  Dir -.->|connect / notify| D
+1. About the Project
+2. Problem Statement
+3. Key Features
+4. System Architecture
+5. Core Workflow
+6. Gamification — Donor Engagement Engine
+7. Tech Stack
+8. Project Structure
+9. Getting Started
+10. Environment Variables
+11. Available Scripts
+12. Roadmap
+13. Contributing
+14. Code of Conduct
+15. License
+16. Acknowledgments
+17. Repository
+
+---
+
+## About the Project
+
+**LifeLink** is a web platform designed to close the gap between people who need blood or organs and the donors who can provide them — matched fast, fairly, and within the same city, since organs and blood have an extremely short viable transport window.
+
+Individuals can register as donors (living blood donors or post-mortem organ pledgers), and hospitals can raise emergency requests that are instantly matched against an explainable scoring engine, dispatched to the best-fit donor, tracked through simulated logistics, and permanently logged with a cryptographic verification hash.
+
+This project was built for a hackathon and is now open for community contributions to grow it into a production-ready system.
+
+---
+
+## Problem Statement
+
+Organs and blood have an extremely short viable transport window, so allocation has to happen fast, fairly, and within the same city. Today:
+- Individuals who need an organ often don't know where or how to find one.
+- Hospitals in an emergency have no fast, transparent way to locate and reach eligible donors.
+- Existing donor registries are often static lists with no real-time matching or accountability.
+
+**LifeLink** solves this with an instant, explainable matching engine for hospitals and a simple, engaging registration experience for individuals.
+
+---
+
+## Key Features
+
+- 🧍 **Individual registration** — sign up as a donor, pledge organs for post-mortem donation, and register as a living blood donor
+- 🏥 **Hospital emergency requests** — create urgent requests for a specific blood type or organ
+- ⚡ **Matching Engine** — live, explainable scoring of eligible donors on compatibility, proximity, and urgency
+- 📲 **Emergency Dispatch (simulated)** — top-ranked donor alerted via a simulated WhatsApp/SMS message, with automatic fallback to the next donor
+- 🚑 **Live Logistics View** — auto-generated route with an animated transport vehicle and simulated temperature telemetry
+- 🔐 **Transparency Log** — every allocation recorded with a SHA-256 verification hash to prove priority-based, not favoritism-based, allocation
+- 🤖 **AI Recommendations** — rule-based insight cards for donors (tier progress, high-demand blood types) and hospitals (seasonal demand trends)
+- 📊 **Reports Page** — charts covering donations over time, fulfillment rate, and city-wise donor distribution
+- 🗺️ **Nearby Hospital Search** — Google Maps-based lookup for cross-hospital transfer requests when local supply is short
+- 🏆 **Gamification** — donor levels, unlockable badges, and a city leaderboard to drive repeat donations
+
+<details>
+<summary><strong>▸ Full page list</strong></summary>
+
+- Landing Page
+- Login / Signup (Individual & Hospital)
+- Individual Dashboard
+- Organ Donation Registration
+- Hospital Dashboard
+- Create Emergency Request
+- Matching Engine
+- Emergency Dispatch Simulation
+- Live Logistics View
+- Transparency Log / Verification
+- AI Recommendations
+- Reports
+- Nearby Hospital Search
+
+</details>
+
+---
+
+## System Architecture
+
+![Architecture Diagram](./architecture-diagram.svg)
+
+---
+
+## Core Workflow
+
+![Workflow Diagram](./workflow-diagram.svg)
+
+<details>
+<summary><strong>▸ Click to expand the full step-by-step workflow</strong></summary>
+
+1. **Hospital Request** — Hospital logs in and creates an urgent request (e.g. O- blood or a kidney match).
+2. **Matching Engine** — All eligible donors in the same city are scored live on compatibility, proximity, and urgency; the formula is shown on-screen for transparency.
+3. **Emergency Dispatch (simulated)** — The top-ranked donor receives a simulated WhatsApp/SMS alert. If declined, the system automatically cascades to the next-ranked donor.
+4. **Live Logistics View** — Once accepted, an auto-generated route is shown with an animated transport vehicle and simulated temperature telemetry.
+5. **Transparency Log** — The completed allocation is recorded with a SHA-256 verification hash, proving it followed medical priority rather than favoritism.
+
+</details>
+
+---
+
+## Gamification — Donor Engagement Engine
+
+![Gamification Tiers](./gamification-tiers.svg)
+
+<details>
+<summary><strong>▸ Why gamification?</strong></summary>
+
+Donor drop-off after a single donation is one of the biggest real-world problems for blood/organ networks. LifeLink counters this with:
+- **Donor Levels** (Bronze → Silver → Gold → Platinum Lifesaver)
+- **Unlockable badges** for milestones (e.g. "First Pledge", "Blood Hero x3", "Universal Donor")
+- **City-wise leaderboard** for friendly competition
+- **Progress bars and micro-animations** on every pledge/donation action
+
+This is the platform's retention engine — it directly targets repeat engagement, not just one-time sign-ups.
+
+</details>
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Why |
+|---|---|---|
+| Frontend | React + TypeScript | Component-based UI with type safety |
+| Styling | Tailwind CSS | Fast, consistent styling and easy theming |
+| Animation | Framer Motion | Live scoring counters, vehicle movement, badge unlocks |
+| Auth & Database | Firebase (Auth + Firestore) | Serverless auth and real-time listeners power the live matching and logistics views |
+| Maps | Google Maps JavaScript API | Real map rendering, distance calculation, route + vehicle simulation |
+| Charts | Recharts | Reports and analytics visualizations |
+| Verification | SHA-256 (Web Crypto API / crypto-js) | Real cryptographic hashing for the transparency log (not a distributed blockchain) |
+| Icons | Lucide React | Consistent icon set |
+
+> **Note on simulated components:** WhatsApp/SMS alerts and live GPS vehicle tracking are currently simulated in the UI rather than wired to real telemetry or messaging APIs (e.g. Twilio), since those require infrastructure and approvals beyond the initial build. The matching engine, hashing/verification, database, and map rendering are all fully real and functional. Wiring up real integrations here is one of the best first contributions — see Roadmap.
+
+---
+
+## Project Structure
+
+```
+lifelink/
+├── public/                  # Static assets
+├── src/
+│   ├── assets/               # Images, icons, SVGs
+│   ├── components/           # Reusable UI components
+│   ├── pages/                 # Route-level pages (Landing, Dashboard, Matching Engine, etc.)
+│   ├── features/
+│   │   ├── auth/               # Login/signup logic
+│   │   ├── matching-engine/     # Scoring algorithm
+│   │   ├── dispatch/            # Simulated alert logic
+│   │   ├── logistics/           # Route + telemetry simulation
+│   │   ├── verification/        # SHA-256 hashing utilities
+│   │   └── gamification/        # Levels, badges, leaderboard logic
+│   ├── hooks/                 # Custom React hooks
+│   ├── lib/                   # Firebase config, Maps config, utilities
+│   ├── types/                  # TypeScript types/interfaces
+│   ├── App.tsx
+│   └── main.tsx
+├── .env.example
+├── package.json
+├── tailwind.config.js
+├── LICENSE
+└── README.md
 ```
 
-### Hospital ↔ donor
-
-Hospitals open **Donor Directory**, filter by blood group or pledged organ, and **Connect**. The donor sees that approach in their match feed and personal report (“hospitals that approached your organ pledge this month”).
+> This structure is a recommended starting point — update it to match the actual repo once scaffolded.
 
 ---
 
-## Screens at a glance
+## Getting Started
 
-**Landing** — no demo switcher. Photography and a pledge CTA instead of a live simulation panel.
+### Prerequisites
 
-![Care](https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80)
+- Node.js v18 or higher
+- npm or yarn
+- A Firebase project (Auth + Firestore enabled)
+- A Google Maps API key with the Maps JavaScript API and Distance Matrix API enabled
 
-**Donor report** — only that person’s logs: blood donations, organs pledged, hospital approaches, match history.
-
-**Hospital report** — hospital name, requests made, inbound approvals from other hospitals, time the request was made, organ/unit delivery time.
-
-**Auth** — email/password register and login only (no one-click demo accounts).
-
----
-
-## Stack
-
-- **Vite 5 + React 18 + TypeScript**
-- **Tailwind CSS** + Framer Motion + Recharts
-- **Firebase Auth + Firestore** (falls back to in-memory data if the network is blocked)
-- Deploy as a static SPA on **Vercel**
-
----
-
-## Local setup
+### Installation
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd lifelink
+
+# Install dependencies
 npm install
+
+# Copy the example environment file and fill in your keys
+cp .env.example .env
+
+# Start the development server
 npm run dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`).
+The app should now be running at `http://localhost:5173` (or whichever port your dev server prints).
 
-```bash
-npm run build
-npm run preview
+---
+
+## Environment Variables
+
+Create a `.env` file in the project root with the following:
+
+```env
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
----
-
-## Deploy on Vercel
-
-This repo is already a Vite app. `vercel.json` rewrites all routes to `index.html` so React Router paths (`/dashboard`, `/reports`, …) work after refresh.
-
-1. Push the project to GitHub.
-2. [Import](https://vercel.com/new) the repo in Vercel.
-3. Framework: **Vite** (auto). Build: `npm run build`. Output: `dist`.
-4. Deploy.
-
-Firebase keys currently live in `src/lib/firebase.ts`. For production you can later move them to Vercel env vars (`VITE_FIREBASE_*`) and read them in that file.
+> Never commit your `.env` file. `.env.example` should be kept in the repo with placeholder values for contributors.
 
 ---
 
-## Main routes
+## Available Scripts
 
-| Path | Who |
-|------|-----|
-| `/` | Public landing |
-| `/auth` | Login / register |
-| `/dashboard` | Donor home |
-| `/organ-pledge` | Update posthumous organs |
-| `/recommendations` | Insights + donation blogs (donor) |
-| `/reports` | Role-specific reports |
-| `/hospital-dashboard` | Hospital home |
-| `/donor-directory` | Connect to donors & pledges |
-| `/create-request` | Emergency request |
-| `/matching-engine` | Compatibility ranking |
-| `/dispatch` | Cold-chain / dispatch view |
-| `/nearby-hospitals` | Cross-hospital stock |
-| `/transparency` | Hash log |
+| Command | Description |
+|---|---|
+| `npm run dev` | Runs the app in development mode |
+| `npm run build` | Builds the app for production |
+| `npm run preview` | Previews the production build locally |
+| `npm run lint` | Runs the linter across the codebase |
+| `npm run format` | Formats code with Prettier |
 
 ---
 
-## Matching (high level)
+## Roadmap
 
-Scores combine **blood compatibility (~50%)**, **proximity (~30%)**, and **reliability (~20%)**. Hospitals still confirm clinical eligibility offline; the app does not replace transplant law or death certification.
+- [ ] Real WhatsApp/SMS integration via Twilio or a similar provider
+- [ ] Real-time GPS tracking for organ transport vehicles
+- [ ] ML-based demand forecasting to replace rule-based AI recommendations
+- [ ] Integration with government/national organ registries
+- [ ] Inter-city transport support via cold-chain logistics partners
+- [ ] Multi-language support for wider accessibility
+- [ ] Automated test coverage (unit + integration)
+- [ ] Accessibility (WCAG) audit and improvements
+
+Have an idea not listed here? Open an issue with the `enhancement` label.
 
 ---
 
-## Team note
+## Contributing
 
-Built as **LifeLink** (hackathon lineage: InnovationHackathon-StrawHats). For questions about allocation ethics, treat this as a demonstration of workflow — not a licensed transplant system.
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. **Fork** the repository
+2. **Create your feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Commit your changes** using a clear, conventional message
+   ```bash
+   git commit -m "feat: add proximity-based donor sorting"
+   ```
+4. **Push to your branch**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+5. **Open a Pull Request** against the `main` branch, describing what you changed and why
+
+### Guidelines
+
+- Keep pull requests focused on a single feature or fix — smaller PRs are reviewed faster.
+- Follow the existing code style (run `npm run lint` and `npm run format` before committing).
+- Write clear commit messages, ideally following the Conventional Commits style (`feat:`, `fix:`, `docs:`, `refactor:`, etc.).
+- If you're adding a new feature, briefly describe it in your PR and update this README if relevant.
+- For larger changes, please open an issue first to discuss what you'd like to change.
+- Be respectful and constructive in code reviews and discussions.
+
+### Good first issues
+
+If you're new to the project, look for issues tagged `good first issue` — these are scoped to be approachable without deep context on the whole codebase. Good starting points include:
+- Wiring up a real Twilio integration behind a feature flag
+- Adding form validation to the signup pages
+- Improving mobile responsiveness on the dashboard
+- Adding unit tests for the matching engine's scoring function
+
+---
+
+## Code of Conduct
+
+This project follows a standard Contributor Code of Conduct. Be kind, be respectful, and assume good intent. Harassment or discriminatory language/behavior of any kind will not be tolerated. Consider adopting a standard contributor covenant as a starting point if a `CODE_OF_CONDUCT.md` file doesn't yet exist in this repo.
+
+---
+
+## License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+---
+
+## Acknowledgments
+
+- Built as a hackathon submission under the **Healthcare** theme
+- Inspired by real gaps in blood/organ donation infrastructure in emergency care
+- Thanks to every contributor who helps take this from a hackathon prototype to something deployable
+
+---
+
+## Repository
+
+`https://github.com/Manaspingle/InnovationHackathon-StrawHats1`
+
