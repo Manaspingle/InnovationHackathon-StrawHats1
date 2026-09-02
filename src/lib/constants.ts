@@ -2,7 +2,7 @@ export const BLOOD_GROUPS = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
 
 export const ORGAN_TYPES = ['Kidney', 'Liver', 'Heart', 'Cornea', 'Lungs', 'Bone Marrow'];
 
-export const CITIES = ['Mumbai', 'Delhi'];
+export const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai'];
 
 export const DONOR_LEVELS = ['Bronze', 'Silver', 'Gold', 'Platinum Lifesaver'];
 
@@ -49,4 +49,7 @@ export const BLOOD_COMPATIBILITY: Record<string, string[]> = {
 export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   Mumbai: { lat: 19.0760, lng: 72.8777 },
   Delhi: { lat: 28.6139, lng: 77.2090 },
+  Bangalore: { lat: 12.9716, lng: 77.5946 },
+  Hyderabad: { lat: 17.3850, lng: 78.4867 },
+  Chennai: { lat: 13.0827, lng: 80.2707 },
 };

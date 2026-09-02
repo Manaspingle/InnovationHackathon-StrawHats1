@@ -1,15 +1,23 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { 
+  signOut as firebaseSignOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  User
+} from 'firebase/auth';
+import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { mockDonors, mockHospitals } from '@/lib/mockData';
 import type { Profile, Donor, Hospital } from '@/types';
 
 interface AuthContextType {
-  session: Session | null;
+  session: User | null;
   profile: Profile | null;
   donor: Donor | null;
   hospital: Hospital | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, role: 'individual' | 'hospital', data: any) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -18,113 +26,149 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [donor, setDonor] = useState<Donor | null>(null);
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadUserData(userId: string, userEmail: string) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    setProfile(profileData as Profile | null);
-
-    if (profileData) {
-      if (profileData.role === 'individual') {
-        const { data: donorData } = await supabase
-          .from('donors')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-        setDonor(donorData as Donor | null);
-      } else if (profileData.role === 'hospital') {
-        const { data: hospitalData } = await supabase
-          .from('hospitals')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-        setHospital(hospitalData as Hospital | null);
-      }
-    } else {
-      // Try to find seed data by email (for demo accounts)
-      const { data: donorByEmail } = await supabase
-        .from('donors')
-        .select('*')
-        .eq('email', userEmail)
-        .maybeSingle();
-      if (donorByEmail) {
-        setDonor(donorByEmail as Donor);
+  async function loadUserData(user: User) {
+    try {
+      // First try to find in mock data
+      const mockDonor = mockDonors.find(d => d.email === user.email);
+      if (mockDonor) {
+        setDonor(mockDonor);
+        setProfile({
+          id: user.uid,
+          user_id: user.uid,
+          role: 'individual',
+          email: user.email || '',
+          created_at: new Date().toISOString(),
+        });
         return;
       }
-      const { data: hospitalByEmail } = await supabase
-        .from('hospitals')
-        .select('*')
-        .eq('email', userEmail)
-        .maybeSingle();
-      if (hospitalByEmail) {
-        setHospital(hospitalByEmail as Hospital);
+
+      const mockHospital = mockHospitals.find(h => h.email === user.email);
+      if (mockHospital) {
+        setHospital(mockHospital);
+        setProfile({
+          id: user.uid,
+          user_id: user.uid,
+          role: 'hospital',
+          email: user.email || '',
+          created_at: new Date().toISOString(),
+        });
         return;
       }
+
+      // Try to query Firestore
+      const profilesRef = collection(db, 'profiles');
+      const q = query(profilesRef, where('user_id', '==', user.uid));
+      const profileSnap = await getDocs(q);
+
+      if (!profileSnap.empty) {
+        const profileData = profileSnap.docs[0].data() as Profile;
+        setProfile(profileData);
+
+        if (profileData.role === 'individual') {
+          const donorsRef = collection(db, 'donors');
+          const donorQuery = query(donorsRef, where('user_id', '==', user.uid));
+          const donorSnap = await getDocs(donorQuery);
+          if (!donorSnap.empty) {
+            setDonor(donorSnap.docs[0].data() as Donor);
+          }
+        } else if (profileData.role === 'hospital') {
+          const hospitalsRef = collection(db, 'hospitals');
+          const hospitalQuery = query(hospitalsRef, where('user_id', '==', user.uid));
+          const hospitalSnap = await getDocs(hospitalQuery);
+          if (!hospitalSnap.empty) {
+            setHospital(hospitalSnap.docs[0].data() as Hospital);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
     }
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        loadUserData(session.user.id, session.user.email || '').finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        (async () => {
-          await loadUserData(session.user.id, session.user.email || '');
-          setLoading(false);
-        })();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setSession(user);
+      if (user) {
+        await loadUserData(user);
       } else {
         setProfile(null);
         setDonor(null);
         setHospital(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
-  async function signUp(email: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return { error: error.message };
-    if (data.user) {
-      // Profile will be created after signup form submits role data
+  async function signUp(email: string, password: string, role: 'individual' | 'hospital', data: any) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create profile document
+      const profilesRef = collection(db, 'profiles');
+      await addDoc(profilesRef, {
+        user_id: user.uid,
+        email: user.email,
+        role: role,
+        created_at: Timestamp.now(),
+      } as Profile);
+
+      // Create donor or hospital document
+      if (role === 'individual') {
+        const donorsRef = collection(db, 'donors');
+        await addDoc(donorsRef, {
+          user_id: user.uid,
+          email: user.email,
+          ...data,
+          created_at: Timestamp.now(),
+        } as Donor);
+      } else if (role === 'hospital') {
+        const hospitalsRef = collection(db, 'hospitals');
+        await addDoc(hospitalsRef, {
+          user_id: user.uid,
+          email: user.email,
+          ...data,
+          created_at: Timestamp.now(),
+        } as Hospital);
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      return { error: error.message };
     }
-    return { error: null };
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
-    return { error: null };
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return { error: null };
+    } catch (error: any) {
+      return { error: error.message };
+    }
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setDonor(null);
-    setHospital(null);
+    try {
+      await firebaseSignOut(auth);
+      setProfile(null);
+      setDonor(null);
+      setHospital(null);
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+    }
   }
 
   async function refreshProfile() {
-    if (session?.user) {
-      await loadUserData(session.user.id, session.user.email || '');
+    if (session) {
+      await loadUserData(session);
     }
   }
 

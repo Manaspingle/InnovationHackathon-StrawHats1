@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Building2, Mail, Lock, User, Phone, MapPin, BadgeCheck, ChevronRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { BLOOD_GROUPS, ORGAN_TYPES, CITIES, CITY_COORDS } from '@/lib/constants';
 
 export default function AuthPage() {
@@ -55,35 +54,10 @@ export default function AuthPage() {
       }
       navigate('/dashboard');
     } else {
-      const { error: signUpError } = await signUp(email, password);
-      if (signUpError) {
-        setError(signUpError);
-        setLoading(false);
-        return;
-      }
-
-      // Get the session that was just created
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        setError('Failed to create account. Please try again.');
-        setLoading(false);
-        return;
-      }
-
-      const userId = session.user.id;
-
-      // Create profile
-      await supabase.from('profiles').insert({
-        user_id: userId,
-        role,
-        email,
-      });
+      const coords = CITY_COORDS[city] || { lat: 0, lng: 0 };
 
       if (role === 'individual') {
-        const coords = CITY_COORDS[city] || { lat: 0, lng: 0 };
-        await supabase.from('donors').insert({
-          user_id: userId,
-          email,
+        const { error: signUpError } = await signUp(email, password, role, {
           full_name: fullName,
           age: parseInt(age) || 0,
           blood_group: bloodGroup,
@@ -96,14 +70,18 @@ export default function AuthPage() {
           donor_level: 'Bronze',
           donor_points: organs.length > 0 ? 60 : 0,
           blood_donations: 0,
+          medical_allergies: '',
+          medical_conditions: '',
           lat: coords.lat + (Math.random() - 0.5) * 0.05,
           lng: coords.lng + (Math.random() - 0.5) * 0.05,
         });
+        if (signUpError) {
+          setError(signUpError);
+          setLoading(false);
+          return;
+        }
       } else {
-        const coords = CITY_COORDS[city] || { lat: 0, lng: 0 };
-        await supabase.from('hospitals').insert({
-          user_id: userId,
-          email,
+        const { error: signUpError } = await signUp(email, password, role, {
           hospital_name: hospitalName,
           registration_id: registrationId,
           city,
@@ -115,6 +93,11 @@ export default function AuthPage() {
           lng: coords.lng + (Math.random() - 0.5) * 0.05,
           inventory: {},
         });
+        if (signUpError) {
+          setError(signUpError);
+          setLoading(false);
+          return;
+        }
       }
 
       navigate('/dashboard');
