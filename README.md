@@ -17,7 +17,7 @@ A city-based platform that connects individual donors and hospitals for real-tim
 3. Key Features
 4. System Architecture
 5. Core Workflow
-6. Gamification — Donor Engagement Engine
+6. Gamification (Donor Engagement Engine)
 7. Tech Stack
 8. Project Structure
 9. Getting Started
@@ -142,8 +142,6 @@ This is the platform's retention engine — it directly targets repeat engagemen
 | Verification | SHA-256 (Web Crypto API / crypto-js) | Real cryptographic hashing for the transparency log (not a distributed blockchain) |
 | Icons | Lucide React | Consistent icon set |
 
-> **Note on simulated components:** WhatsApp/SMS alerts and live GPS vehicle tracking are currently simulated in the UI rather than wired to real telemetry or messaging APIs (e.g. Twilio), since those require infrastructure and approvals beyond the initial build. The matching engine, hashing/verification, database, and map rendering are all fully real and functional. Wiring up real integrations here is one of the best first contributions — see Roadmap.
-
 ---
 
 ## Project Structure
@@ -173,8 +171,6 @@ lifelink/
 ├── LICENSE
 └── README.md
 ```
-
-> This structure is a recommended starting point — update it to match the actual repo once scaffolded.
 
 ---
 
