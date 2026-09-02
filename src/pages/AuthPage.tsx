@@ -3,14 +3,13 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Building2, Mail, Lock, User, Phone, MapPin, BadgeCheck,
-  ChevronRight, AlertCircle, Sparkles, Droplet, ShieldCheck, Check
+  ChevronRight, AlertCircle, Check
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { BLOOD_GROUPS, ORGAN_TYPES, CITIES, CITY_COORDS } from '@/lib/constants';
-import { mockDonors, mockHospitals } from '@/lib/mockData';
 
 export default function AuthPage() {
-  const { signIn, signUp, loginAsDemo } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -157,58 +156,6 @@ export default function AuthPage() {
           </div>
 
           <div className="p-6 sm:p-8">
-            {/* Quick 1-Click Demo Accounts Banner */}
-            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary-50 via-slate-50 to-teal-50 border border-slate-200/80">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-primary-600" />
-                  Instant 1-Click Demo Accounts
-                </span>
-                <span className="text-[10px] text-slate-400">No typing needed</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    loginAsDemo('individual', 'donor_1');
-                    navigate('/dashboard');
-                  }}
-                  className="p-2.5 bg-white hover:bg-primary-50 rounded-xl border border-slate-200 text-left transition-all text-xs"
-                >
-                  <p className="font-bold text-slate-900 flex items-center gap-1">
-                    <Droplet className="w-3.5 h-3.5 text-primary-600" /> Rajesh (O+)
-                  </p>
-                  <p className="text-[10px] text-slate-500">Silver Donor · Mumbai</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    loginAsDemo('individual', 'donor_4');
-                    navigate('/dashboard');
-                  }}
-                  className="p-2.5 bg-white hover:bg-teal-50 rounded-xl border border-slate-200 text-left transition-all text-xs"
-                >
-                  <p className="font-bold text-slate-900 flex items-center gap-1">
-                    <Heart className="w-3.5 h-3.5 text-teal-600" /> Neha (O-)
-                  </p>
-                  <p className="text-[10px] text-slate-500">Platinum · Bangalore</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    loginAsDemo('hospital', 'hospital_1');
-                    navigate('/hospital-dashboard');
-                  }}
-                  className="p-2.5 bg-white hover:bg-primary-50 rounded-xl border border-slate-200 text-left transition-all text-xs"
-                >
-                  <p className="font-bold text-slate-900 flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5 text-primary-600" /> Apollo Hospital
-                  </p>
-                  <p className="text-[10px] text-slate-500">Mumbai · Verified</p>
-                </button>
-              </div>
-            </div>
-
             {/* Mode toggle (Login / Signup) */}
             <div className="flex gap-2 mb-6 p-1.5 bg-slate-100 rounded-2xl">
               <button
@@ -472,9 +419,8 @@ export default function AuthPage() {
                         onChange={(e) => setVerified(e.target.checked)}
                         className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500"
                       />
-                      <span className="text-xs text-teal-900 font-bold flex items-center gap-1.5">
-                        <ShieldCheck className="w-4 h-4 text-teal-600" />
-                        Pre-verified medical license badge (Demo mode enabled)
+                      <span className="text-xs text-teal-900 font-bold">
+                        Medical center verification pledge (Clinical license confirmed)
                       </span>
                     </label>
                   </motion.div>
@@ -508,7 +454,7 @@ export default function AuthPage() {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2.5 text-xs font-semibold text-primary-700 bg-primary-50 border border-primary-200 p-3.5 rounded-2xl">
+                <div className="flex items-center gap-2.5 text-xs font-semibold text-primary-700 bg-primary-50 p-3.5 rounded-2xl border border-primary-200">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {error}
                 </div>
@@ -519,7 +465,7 @@ export default function AuthPage() {
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold rounded-2xl transition-all shadow-xl shadow-primary-600/25 disabled:opacity-60 text-base"
               >
-                {loading ? 'Authenticating with Firebase...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+                {loading ? 'Authenticating...' : mode === 'login' ? 'Sign In' : 'Create Account'}
                 <ChevronRight className="w-5 h-5" />
               </button>
             </form>

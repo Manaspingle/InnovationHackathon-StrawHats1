@@ -2,17 +2,16 @@
 import { useAuth } from '@/context/AuthContext';
 import {
   Heart, Menu, X, LogOut, LayoutDashboard, Siren, ShieldCheck,
-  User, Building2, Droplet, Sparkles, BarChart3, MapPin, ChevronDown
+  User, Building2, Droplet, Sparkles, BarChart3, MapPin, Users
 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
-  const { session, profile, donor, hospital, signOut, loginAsDemo } = useAuth();
+  const { session, profile, donor, hospital, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [demoMenuOpen, setDemoMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -85,7 +84,7 @@ export default function Navbar() {
                     }`}
                   >
                     <Sparkles className="w-4 h-4 text-amber-500" />
-                    AI Insights
+                    AI Insights & Blogs
                   </Link>
                   <Link
                     to="/reports"
@@ -96,7 +95,7 @@ export default function Navbar() {
                     }`}
                   >
                     <BarChart3 className="w-4 h-4 text-teal-600" />
-                    Reports
+                    My Contribution Report
                   </Link>
                 </>
               )}
@@ -112,6 +111,17 @@ export default function Navbar() {
                     }`}
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    to="/donor-directory"
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      location.pathname === '/donor-directory'
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Users className="w-4 h-4 text-primary-600" />
+                    Donor Directory
                   </Link>
                   <Link
                     to="/nearby-hospitals"
@@ -144,7 +154,7 @@ export default function Navbar() {
                     }`}
                   >
                     <BarChart3 className="w-4 h-4 text-blue-600" />
-                    Reports
+                    Hospital Reports
                   </Link>
                 </>
               )}
@@ -155,83 +165,6 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {!session ? (
               <>
-                {/* Demo Quick Switcher */}
-                <div className="relative">
-                  <button
-                    onClick={() => setDemoMenuOpen(!demoMenuOpen)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all border border-slate-200"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-primary-600" />
-                    Quick Demo Switcher
-                    <ChevronDown className="w-3 h-3 text-slate-500" />
-                  </button>
-
-                  <AnimatePresence>
-                    {demoMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 text-left"
-                      >
-                        <p className="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                          1-Click Demo Logins
-                        </p>
-                        <button
-                          onClick={() => {
-                            loginAsDemo('individual', 'donor_1');
-                            setDemoMenuOpen(false);
-                            navigate('/dashboard');
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-primary-50 rounded-xl transition-all"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Droplet className="w-4 h-4 text-primary-600" />
-                            <div>
-                              <p className="text-xs font-bold text-slate-800">Rajesh Kumar (O+)</p>
-                              <p className="text-[10px] text-slate-500">Silver Donor · Mumbai</p>
-                            </div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => {
-                            loginAsDemo('individual', 'donor_4');
-                            setDemoMenuOpen(false);
-                            navigate('/dashboard');
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-primary-50 rounded-xl transition-all"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Heart className="w-4 h-4 text-teal-600" />
-                            <div>
-                              <p className="text-xs font-bold text-slate-800">Neha Singh (O-)</p>
-                              <p className="text-[10px] text-slate-500">Platinum Lifesaver · Bangalore</p>
-                            </div>
-                          </div>
-                        </button>
-                        <div className="h-px bg-slate-100 my-1" />
-                        <button
-                          onClick={() => {
-                            loginAsDemo('hospital', 'hospital_1');
-                            setDemoMenuOpen(false);
-                            navigate('/hospital-dashboard');
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-xl transition-all"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-primary-600" />
-                            <div>
-                              <p className="text-xs font-bold text-slate-800">Apollo Hospital</p>
-                              <p className="text-[10px] text-slate-500">Mumbai · Verified</p>
-                            </div>
-                          </div>
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Login & Sign Up Options */}
                 <Link
                   to="/auth?mode=signup&role=individual"
                   className="px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-700 hover:text-primary-600 hover:bg-primary-50 transition-colors"
@@ -328,32 +261,6 @@ export default function Navbar() {
             >
               {!session ? (
                 <div className="space-y-2">
-                  <div className="p-3 bg-slate-50 rounded-xl mb-3">
-                    <p className="text-xs font-bold text-slate-500 mb-2">TRY INSTANT DEMO:</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => {
-                          loginAsDemo('individual', 'donor_1');
-                          setIsOpen(false);
-                          navigate('/dashboard');
-                        }}
-                        className="p-2 bg-white rounded-lg text-xs font-bold text-slate-800 border border-slate-200 text-center"
-                      >
-                        🩸 Donor Demo
-                      </button>
-                      <button
-                        onClick={() => {
-                          loginAsDemo('hospital', 'hospital_1');
-                          setIsOpen(false);
-                          navigate('/hospital-dashboard');
-                        }}
-                        className="p-2 bg-white rounded-lg text-xs font-bold text-slate-800 border border-slate-200 text-center"
-                      >
-                        🏥 Hospital Demo
-                      </button>
-                    </div>
-                  </div>
-
                   <Link
                     to="/auth?mode=signup&role=individual"
                     onClick={() => setIsOpen(false)}
@@ -415,7 +322,7 @@ export default function Navbar() {
                         className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
                       >
                         <Sparkles className="w-4 h-4 text-amber-500" />
-                        AI Recommendations
+                        AI Insights & Blogs
                       </Link>
                       <Link
                         to="/reports"
@@ -423,7 +330,7 @@ export default function Navbar() {
                         className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
                       >
                         <BarChart3 className="w-4 h-4 text-teal-600" />
-                        Reports
+                        My Contribution Report
                       </Link>
                     </>
                   )}
@@ -437,6 +344,14 @@ export default function Navbar() {
                       >
                         <Siren className="w-4 h-4" />
                         Create Emergency Request
+                      </Link>
+                      <Link
+                        to="/donor-directory"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
+                      >
+                        <Users className="w-4 h-4 text-primary-600" />
+                        Donor Directory
                       </Link>
                       <Link
                         to="/nearby-hospitals"
@@ -460,7 +375,7 @@ export default function Navbar() {
                         className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-slate-800 hover:bg-slate-100"
                       >
                         <BarChart3 className="w-4 h-4 text-blue-600" />
-                        Reports
+                        Hospital Reports
                       </Link>
                     </>
                   )}

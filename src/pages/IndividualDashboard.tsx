@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   Droplet, Heart, Trophy, Award, Star, Crown, Globe, Shield, Zap,
-  TrendingUp, Bell, Info, Activity, MapPin, Phone, Plus, Medal, CheckCircle2
+  Bell, Activity, MapPin, Phone, Plus, Medal, CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getDonors, updateDonor, createDonation, getNotifications } from '@/lib/firebaseDb';
@@ -309,21 +309,6 @@ export default function IndividualDashboard() {
                       : "You've unlocked the highest honor in the LifeLink network!"}
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Why Gamification Card */}
-            <div className="bg-gradient-to-r from-primary-50/80 via-white to-teal-50/80 rounded-3xl border border-slate-200/70 p-6 flex items-start gap-4 shadow-sm">
-              <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 text-primary-600 shadow-sm border border-slate-100">
-                <Info className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-black text-slate-900 text-sm sm:text-base mb-1">
-                  Why Gamification in Blood & Organ Donation?
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Donor drop-off is the leading bottleneck for emergency medical logistics. Levels, verifiable badges, and city leaderboards act as our retention engine — ensuring donors stay active, informed, and reachable when seconds count.
-                </p>
               </div>
             </div>
 

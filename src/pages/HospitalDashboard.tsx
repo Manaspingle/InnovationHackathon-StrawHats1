@@ -123,7 +123,7 @@ export default function HospitalDashboard() {
       </div>
 
       {/* Quick Access Tiles */}
-      <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-8">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <button
           onClick={() => navigate('/create-request')}
           className="flex items-center justify-between p-6 bg-gradient-to-r from-primary-50 via-white to-red-50/30 rounded-3xl border border-primary-200/80 shadow-sm hover:shadow-md hover:border-primary-400 transition-all text-left group"
@@ -135,6 +135,22 @@ export default function HospitalDashboard() {
             <div>
               <p className="font-black text-slate-900 text-base sm:text-lg">Trigger Matching Engine</p>
               <p className="text-xs sm:text-sm text-slate-500">Initiate emergency donor compatibility search</p>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-primary-600 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        <button
+          onClick={() => navigate('/donor-directory')}
+          className="flex items-center justify-between p-6 bg-gradient-to-r from-rose-50 via-white to-primary-50/30 rounded-3xl border border-primary-200/80 shadow-sm hover:shadow-md hover:border-primary-400 transition-all text-left group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-13 h-13 p-3.5 bg-primary-700 text-white rounded-2xl shadow-lg shadow-primary-600/25 group-hover:scale-105 transition-transform">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-black text-slate-900 text-base sm:text-lg">Connect with Donors</p>
+              <p className="text-xs sm:text-sm text-slate-500">See available blood and posthumous organ pledges</p>
             </div>
           </div>
           <ArrowRight className="w-5 h-5 text-primary-600 group-hover:translate-x-1 transition-transform" />

@@ -34,6 +34,7 @@ let memoryRequests: Request[] = [
     matched_donor_id: null,
     match_score: null,
     created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    delivery_time: null,
   },
   {
     id: 'req_2',
@@ -48,6 +49,22 @@ let memoryRequests: Request[] = [
     matched_donor_id: 'donor_1',
     match_score: 94.5,
     created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+    delivery_time: new Date(Date.now() - 2 * 24 * 3600 * 1000 + 4.5 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'req_3',
+    hospital_id: 'hospital_1',
+    request_type: 'organ',
+    specific_type: 'Liver',
+    urgency: 'Critical',
+    patient_age: 38,
+    patient_city: 'Mumbai',
+    required_by: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+    status: 'Completed',
+    matched_donor_id: 'donor_2',
+    match_score: 88.0,
+    created_at: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+    delivery_time: new Date(Date.now() - 10 * 24 * 3600 * 1000 + 6 * 3600 * 1000).toISOString(),
   },
 ];
 
@@ -79,6 +96,22 @@ let memoryDonations: Donation[] = [
     points_earned: 60,
     created_at: '2024-01-15T09:00:00.000Z',
   },
+  {
+    id: 'don_3',
+    donor_id: 'donor_2',
+    donation_type: 'blood',
+    donation_date: new Date().toISOString().split('T')[0],
+    points_earned: 30,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'don_4',
+    donor_id: 'donor_3',
+    donation_type: 'blood',
+    donation_date: new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    points_earned: 30,
+    created_at: new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString(),
+  },
 ];
 
 let memoryNotifications: Notification[] = [
@@ -98,6 +131,14 @@ let memoryNotifications: Notification[] = [
     read: true,
     created_at: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
   },
+  {
+    id: 'notif_3',
+    donor_id: 'donor_1',
+    message: 'Apollo Hospital Mumbai reviewed your Kidney, Liver and Cornea pledge this month.',
+    type: 'hospital_interest',
+    read: false,
+    created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
+  },
 ];
 
 let memoryTransfers: Transfer[] = [
@@ -109,6 +150,27 @@ let memoryTransfers: Transfer[] = [
     organ_type: null,
     status: 'Approved',
     created_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+    delivery_time: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'trans_2',
+    from_hospital_id: 'hospital_2',
+    to_hospital_id: 'hospital_1',
+    blood_type: null,
+    organ_type: 'Kidney',
+    status: 'Approved',
+    created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+    delivery_time: new Date(Date.now() - 5 * 24 * 3600 * 1000 + 3 * 3600 * 1000).toISOString(),
+  },
+  {
+    id: 'trans_3',
+    from_hospital_id: 'hospital_3',
+    to_hospital_id: 'hospital_1',
+    blood_type: 'A+',
+    organ_type: null,
+    status: 'Pending',
+    created_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+    delivery_time: null,
   },
 ];
 
@@ -243,6 +305,7 @@ export async function createRequest(requestData: Omit<Request, 'id' | 'created_a
     ...requestData,
     id: `req_${Date.now()}`,
     created_at: new Date().toISOString(),
+    delivery_time: requestData.delivery_time ?? null,
   };
 
   try {
@@ -417,7 +480,9 @@ export async function getTransfers(hospitalId?: string): Promise<Transfer[]> {
   } catch (err) {
     console.warn('Firestore getTransfers fallback:', err);
   }
-  const list = hospitalId ? memoryTransfers.filter((t) => t.from_hospital_id === hospitalId) : [...memoryTransfers];
+  const list = hospitalId
+    ? memoryTransfers.filter((t) => t.from_hospital_id === hospitalId || t.to_hospital_id === hospitalId)
+    : [...memoryTransfers];
   return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
@@ -426,6 +491,7 @@ export async function createTransfer(transferData: Omit<Transfer, 'id' | 'create
     ...transferData,
     id: `trans_${Date.now()}`,
     created_at: new Date().toISOString(),
+    delivery_time: transferData.delivery_time ?? null,
   };
 
   try {

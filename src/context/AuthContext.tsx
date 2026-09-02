@@ -8,7 +8,6 @@ import {
 } from 'firebase/auth';
 import { collection, query, where, getDocs, setDoc, doc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
-import { mockDonors, mockHospitals } from '@/lib/mockData';
 import { getDonors, getHospitals } from '@/lib/firebaseDb';
 import type { Profile, Donor, Hospital } from '@/types';
 
@@ -22,7 +21,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  loginAsDemo: (role: 'individual' | 'hospital', id?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const email = (user.email || '').toLowerCase();
 
-      // Check mock donors first for instant seamless access
+      // Check registered donors
       const allDonors = await getDonors();
       const matchedDonor = allDonors.find(d => d.email.toLowerCase() === email || d.user_id === user.uid || d.id === user.uid);
       if (matchedDonor) {
@@ -105,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Check localStorage for demo session
+    // Restore a local session created when Firebase Auth is unavailable
     const savedDemo = localStorage.getItem('lifelink_demo_session');
     if (savedDemo) {
       try {
@@ -145,7 +143,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         uid = userCredential.user.uid;
         setSession(userCredential.user);
       } catch (authErr: any) {
-        // If auth fails due to existing or network, create local demo session
         console.warn('Firebase Auth signup:', authErr.message);
         setSession({ uid, email });
       }
@@ -217,77 +214,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
-      const emailLower = email.toLowerCase().trim();
-
-      // Check if it matches a seeded donor or hospital
-      const matchedDonor = mockDonors.find(d => d.email.toLowerCase() === emailLower);
-      if (matchedDonor) {
-        loginAsDemo('individual', matchedDonor.id);
-        return { error: null };
-      }
-
-      const matchedHospital = mockHospitals.find(h => h.email.toLowerCase() === emailLower);
-      if (matchedHospital) {
-        loginAsDemo('hospital', matchedHospital.id);
-        return { error: null };
-      }
-
-      // Try Firebase Auth
-      try {
-        const res = await signInWithEmailAndPassword(auth, email, password);
-        setSession(res.user);
-        await loadUserData(res.user);
-        localStorage.removeItem('lifelink_demo_session');
-        return { error: null };
-      } catch (authError: any) {
-        return { error: authError.message || 'Invalid email or password' };
-      }
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      setSession(res.user);
+      await loadUserData(res.user);
+      localStorage.removeItem('lifelink_demo_session');
+      return { error: null };
     } catch (error: any) {
-      return { error: error.message };
-    }
-  }
-
-  function loginAsDemo(role: 'individual' | 'hospital', id?: string) {
-    if (role === 'individual') {
-      const selected = mockDonors.find(d => d.id === id) || mockDonors[0];
-      const demoUser = { uid: selected.id, email: selected.email };
-      const demoProfile: Profile = {
-        id: selected.id,
-        user_id: selected.id,
-        role: 'individual',
-        email: selected.email,
-        created_at: selected.created_at,
-      };
-      setSession(demoUser);
-      setProfile(demoProfile);
-      setDonor(selected);
-      setHospital(null);
-
-      localStorage.setItem('lifelink_demo_session', JSON.stringify({
-        user: demoUser,
-        profile: demoProfile,
-        donor: selected,
-      }));
-    } else {
-      const selected = mockHospitals.find(h => h.id === id) || mockHospitals[0];
-      const demoUser = { uid: selected.id, email: selected.email };
-      const demoProfile: Profile = {
-        id: selected.id,
-        user_id: selected.id,
-        role: 'hospital',
-        email: selected.email,
-        created_at: selected.created_at,
-      };
-      setSession(demoUser);
-      setProfile(demoProfile);
-      setHospital(selected);
-      setDonor(null);
-
-      localStorage.setItem('lifelink_demo_session', JSON.stringify({
-        user: demoUser,
-        profile: demoProfile,
-        hospital: selected,
-      }));
+      return { error: error.message || 'Invalid email or password' };
     }
   }
 
@@ -311,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, donor, hospital, loading, signUp, signIn, signOut, refreshProfile, loginAsDemo }}>
+    <AuthContext.Provider value={{ session, profile, donor, hospital, loading, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

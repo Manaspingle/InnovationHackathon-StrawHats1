@@ -55,6 +55,7 @@ export default function NearbyHospitals() {
       blood_type: isBlood ? type : null,
       organ_type: !isBlood ? type : null,
       status: 'Approved',
+      delivery_time: new Date(Date.now() + targetHospital.estTime * 60 * 1000).toISOString(),
     });
 
     const updated = await getTransfers(hospital.id);

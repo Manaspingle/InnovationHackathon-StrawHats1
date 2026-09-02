@@ -42,6 +42,7 @@ export default function CreateRequest() {
         status: 'Pending',
         matched_donor_id: null,
         match_score: null,
+        delivery_time: null,
       });
 
       navigate(`/matching-engine?requestId=${created.id}`);

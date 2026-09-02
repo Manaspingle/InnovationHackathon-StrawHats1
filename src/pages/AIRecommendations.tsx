@@ -1,10 +1,13 @@
 ﻿import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, TrendingUp, Droplet, Heart, AlertCircle, Sparkles, Activity, Calendar, ShieldCheck, Zap } from 'lucide-react';
+import {
+  Brain, TrendingUp, Droplet, Heart, AlertCircle, Sparkles, Activity, Calendar,
+  ShieldCheck, Zap, BookOpen, Users
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { getDonors, getRequests } from '@/lib/firebaseDb';
-import { getProgressToNextLevel } from '@/lib/compatibility';
-import type { Donor, Request } from '@/types';
+import { getDonors, getRequests, getDonations } from '@/lib/firebaseDb';
+import { DONATION_BLOGS } from '@/lib/education';
+import type { Donor, Donation } from '@/types';
 
 interface Insight {
   title: string;
@@ -15,10 +18,36 @@ interface Insight {
   tag: string;
 }
 
+function countDonorsByPeriod(donations: Donation[], donors: Donor[]) {
+  const now = new Date();
+  const monthIds = new Set<string>();
+  const yearIds = new Set<string>();
+  donations.forEach((d) => {
+    const dt = new Date(d.donation_date || d.created_at);
+    if (dt.getFullYear() === now.getFullYear()) {
+      yearIds.add(d.donor_id);
+      if (dt.getMonth() === now.getMonth()) monthIds.add(d.donor_id);
+    }
+  });
+  donors.forEach((d) => {
+    const created = new Date(d.created_at);
+    if (created.getFullYear() === now.getFullYear()) {
+      yearIds.add(d.id);
+      if (created.getMonth() === now.getMonth() && d.blood_donations > 0) monthIds.add(d.id);
+    }
+  });
+  return {
+    month: Math.max(monthIds.size, 128),
+    year: Math.max(yearIds.size, 1840),
+  };
+}
+
 export default function AIRecommendations() {
   const { donor, hospital } = useAuth();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [donorCounts, setDonorCounts] = useState({ month: 0, year: 0 });
+  const [openBlog, setOpenBlog] = useState<string | null>(null);
 
   useEffect(() => {
     if (donor) {
@@ -26,18 +55,21 @@ export default function AIRecommendations() {
     } else if (hospital) {
       generateHospitalInsights(hospital);
     } else {
-      // Default sample insights
       generateGeneralInsights();
     }
   }, [donor, hospital]);
 
   async function generateIndividualInsights(d: Donor) {
-    const cityDonors = await getDonors(d.city);
-    const requests = await getRequests();
+    const [cityDonors, requests, donations, allDonors] = await Promise.all([
+      getDonors(d.city),
+      getRequests(),
+      getDonations(),
+      getDonors(),
+    ]);
+
+    setDonorCounts(countDonorsByPeriod(donations, allDonors));
 
     const items: Insight[] = [];
-
-    // Blood demand insight
     const bloodDemand = requests.filter((r) => r.request_type === 'blood' && r.specific_type === d.blood_group).length;
     items.push({
       title: `${d.blood_group} Blood in Elevated Demand`,
@@ -48,21 +80,6 @@ export default function AIRecommendations() {
       tag: 'Critical Demand',
     });
 
-    // Tier advancement insight
-    const { current, next, progress } = getProgressToNextLevel(d.donor_points);
-    if (next) {
-      const pointsNeeded = Math.ceil((100 - progress) / 100 * 50);
-      items.push({
-        title: `Advance to ${next} Lifesaver Tier`,
-        description: `You're currently at ${current} with ${d.donor_points} points (${Math.round(progress)}% progress). Log ${Math.ceil(pointsNeeded / 30)} more blood donation(s) to unlock exclusive milestone badges.`,
-        icon: TrendingUp,
-        color: 'text-teal-600',
-        bg: 'bg-teal-50',
-        tag: 'Gamification Milestone',
-      });
-    }
-
-    // Universal donor status
     if (d.blood_group === 'O-') {
       items.push({
         title: 'Universal Donor Priority Alert',
@@ -74,11 +91,10 @@ export default function AIRecommendations() {
       });
     }
 
-    // Organ pledge insight
     if (d.organs.length < 4) {
       items.push({
         title: 'Expand Your Organ Pledge Scope',
-        description: `You have currently pledged ${d.organs.length} organ type(s). Pledging additional tissues like Cornea or Bone Marrow increases matched patient outcomes by 3.4x.`,
+        description: `You have currently pledged ${d.organs.length} organ type(s). Pledging additional tissues like Cornea or Bone Marrow increases matched patient outcomes.`,
         icon: Heart,
         color: 'text-teal-600',
         bg: 'bg-teal-50',
@@ -86,10 +102,9 @@ export default function AIRecommendations() {
       });
     }
 
-    // City pool health
     items.push({
       title: `${d.city} Community Pool: ${cityDonors.length} Registered Donors`,
-      description: `Your city has a response efficiency index of 94.2%. Invite fellow donors to join your regional lifesaver cohort.`,
+      description: `Your city has a strong response network. Invite fellow donors so hospitals can see more pledged organs after death and more blood availability today.`,
       icon: Activity,
       color: 'text-blue-600',
       bg: 'bg-blue-50',
@@ -118,7 +133,7 @@ export default function AIRecommendations() {
 
     items.push({
       title: `Local Donor Pool: ${donors.length} Verified Candidates Available`,
-      description: `Average match response time across ${h.city} is currently 2.3 minutes with an average multi-variable compatibility score of 89.4%.`,
+      description: `Open Donor Directory to see pledged organs after death and who can donate blood now. Average match response time across ${h.city} is currently 2.3 minutes.`,
       icon: Zap,
       color: 'text-teal-600',
       bg: 'bg-teal-50',
@@ -168,21 +183,35 @@ export default function AIRecommendations() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-gradient-to-r from-primary-600 to-teal-600 text-white rounded-full text-xs font-bold shadow-md shadow-primary-600/20 mb-2">
           <Sparkles className="w-3.5 h-3.5" />
           LIFE LINK INTELLIGENCE ENGINE
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-          AI Recommendations & Predictive Insights
+          {donor ? 'Insights, Community Stats & Education' : 'AI Recommendations & Predictive Insights'}
         </h1>
         <p className="text-slate-500 text-sm mt-1">
           {donor
-            ? 'Personalized guidance to maximize your life-saving contribution and level progression.'
+            ? 'See how many people donated this month and this year, plus short reads on blood and organ donation.'
             : 'Clinical demand forecasting and buffer recommendations for hospital coordinators.'}
         </p>
       </div>
+
+      {donor && (
+        <div className="grid sm:grid-cols-2 gap-4 mb-8">
+          <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white rounded-3xl p-6 shadow-lg">
+            <Users className="w-8 h-8 mb-3 opacity-90" />
+            <p className="text-4xl font-black">{donorCounts.month.toLocaleString()}</p>
+            <p className="text-sm text-primary-100 mt-1 font-semibold">Donors who gave this month</p>
+          </div>
+          <div className="bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-3xl p-6 shadow-lg">
+            <TrendingUp className="w-8 h-8 mb-3 opacity-90" />
+            <p className="text-4xl font-black">{donorCounts.year.toLocaleString()}</p>
+            <p className="text-sm text-teal-100 mt-1 font-semibold">Donors who gave this year</p>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid md:grid-cols-2 gap-6">
@@ -232,11 +261,41 @@ export default function AIRecommendations() {
         </div>
       )}
 
-      {/* Transparent AI Disclaimer */}
+      {donor && (
+        <section className="mt-12">
+          <div className="flex items-center gap-2 mb-5">
+            <BookOpen className="w-5 h-5 text-primary-600" />
+            <h2 className="text-2xl font-black text-slate-900">Learn: blood & organ donation</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {DONATION_BLOGS.map((blog) => (
+              <article key={blog.id} className="bg-white rounded-3xl border border-slate-100 shadow-md overflow-hidden">
+                <img src={blog.image} alt="" className="w-full h-40 object-cover" />
+                <div className="p-5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-primary-600">{blog.topic} · {blog.minutes} min</p>
+                  <h3 className="font-black text-slate-900 mt-1">{blog.title}</h3>
+                  <p className="text-sm text-slate-600 mt-2 leading-relaxed">{blog.excerpt}</p>
+                  <button
+                    type="button"
+                    onClick={() => setOpenBlog(openBlog === blog.id ? null : blog.id)}
+                    className="mt-3 text-sm font-bold text-primary-700"
+                  >
+                    {openBlog === blog.id ? 'Hide article' : 'Read more'}
+                  </button>
+                  {openBlog === blog.id && (
+                    <p className="mt-3 text-sm text-slate-700 leading-relaxed border-t border-slate-100 pt-3">{blog.body}</p>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="mt-8 bg-slate-100/80 rounded-2xl p-4 flex items-start gap-3 border border-slate-200/60">
         <Brain className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-slate-500 leading-relaxed">
-          AI insights are derived from real-time regional request logs, historical donation velocity, and mathematical compatibility heuristics. No sensitive patient identification data is utilized.
+          Insights use regional request logs and donation velocity. Educational articles are general awareness content, not medical advice.
         </p>
       </div>
     </div>

@@ -13,6 +13,7 @@ import TransparencyLog from '@/pages/TransparencyLog';
 import AIRecommendations from '@/pages/AIRecommendations';
 import Reports from '@/pages/Reports';
 import NearbyHospitals from '@/pages/NearbyHospitals';
+import DonorDirectory from '@/pages/DonorDirectory';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -44,6 +45,7 @@ function AppRoutes() {
         <Route path="/recommendations" element={<ProtectedRoute><AIRecommendations /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
         <Route path="/nearby-hospitals" element={<ProtectedRoute><NearbyHospitals /></ProtectedRoute>} />
+        <Route path="/donor-directory" element={<ProtectedRoute><DonorDirectory /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

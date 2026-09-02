@@ -61,6 +61,7 @@ export interface Request {
   matched_donor_id: string | null;
   match_score: number | null;
   created_at: string;
+  delivery_time: string | null;
 }
 
 export interface Allocation {
@@ -98,6 +99,7 @@ export interface Transfer {
   blood_type: string | null;
   status: 'Pending' | 'Approved' | 'Rejected';
   created_at: string;
+  delivery_time: string | null;
 }
 
 export interface ScoredDonor extends Donor {

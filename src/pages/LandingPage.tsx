@@ -1,14 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import {
   Heart, Users, Building2, MapPin, ArrowRight, ShieldCheck, Zap,
-  Award, Phone, Mail, Activity, Droplet, CheckCircle2, Lightbulb,
-  Sparkles, Shield, Siren, Clock, HelpCircle
+  Award, Phone, Mail, HandHeart
 } from 'lucide-react';
 import { LANDING_STATS, TESTIMONIALS } from '@/lib/mockData';
-import { useAuth } from '@/context/AuthContext';
 
 function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
   const ref = useRef(null);
@@ -51,8 +49,8 @@ const statsList = [
 const stepsList = [
   {
     num: '01',
-    title: 'Register Your Profile',
-    desc: 'Individuals sign up to pledge posthumous organs or donate blood. Hospitals register with verified credentials.',
+    title: 'Register Your Pledge',
+    desc: 'Individuals sign up to pledge posthumous organs or volunteer for blood donation. Hospitals register with verified credentials.',
     icon: Users,
     gradient: 'from-primary-600 to-primary-700',
     badge: 'Step 1',
@@ -60,7 +58,7 @@ const stepsList = [
   {
     num: '02',
     title: 'Instant AI Matching',
-    desc: 'When an emergency occurs, our algorithm scores all eligible donors by blood compatibility (50%), proximity (30%), and reliability (20%).',
+    desc: 'When an emergency occurs, our algorithm matches eligible donors by blood compatibility (50%), proximity (30%), and reliability (20%).',
     icon: Zap,
     gradient: 'from-teal-600 to-teal-700',
     badge: 'Step 2',
@@ -76,9 +74,6 @@ const stepsList = [
 ];
 
 export default function LandingPage() {
-  const { loginAsDemo } = useAuth();
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-primary-500 selection:text-white">
       {/* Top Bar / Header */}
@@ -147,92 +142,59 @@ export default function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-semibold text-slate-700">Gamified Retention</span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-700">Transparent Care</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* Right Column: Live Matching Simulation Card */}
+            {/* Right Column: Inspiring donation photography */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="lg:col-span-5"
             >
-              <div className="relative bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100/80 backdrop-blur-sm">
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600">
-                      <Siren className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Simulation</p>
-                      <h3 className="font-bold text-slate-900 text-sm sm:text-base">Apollo Hospital, Mumbai</h3>
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 bg-primary-100 text-primary-700 text-xs font-black rounded-lg">
-                    CRITICAL: O-
-                  </span>
+              <div className="relative">
+                <div className="grid grid-cols-2 gap-3">
+                  <img
+                    src="https://images.unsplash.com/photo-1615461066841-6111ee42e8d8?auto=format&fit=crop&w=800&q=80"
+                    alt="Volunteer donating blood"
+                    className="h-44 sm:h-52 w-full object-cover rounded-3xl shadow-xl"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80"
+                    alt="Care team supporting a patient"
+                    className="h-44 sm:h-52 w-full object-cover rounded-3xl shadow-xl mt-8"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=800&q=80"
+                    alt="People holding hands in solidarity"
+                    className="h-36 sm:h-44 w-full object-cover rounded-3xl shadow-xl -mt-4"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800&q=80"
+                    alt="Hands forming a heart"
+                    className="h-36 sm:h-44 w-full object-cover rounded-3xl shadow-xl"
+                  />
                 </div>
-
-                {/* Scored Donors Stack */}
-                <div className="space-y-2.5 py-4">
-                  {[
-                    { name: 'Rajesh Kumar', level: 'Silver', score: 94.5, dist: '2.8 km', top: true },
-                    { name: 'Priya Sharma', level: 'Gold', score: 87.2, dist: '5.1 km', top: false },
-                    { name: 'Neha Singh', level: 'Platinum', score: 81.0, dist: '8.4 km', top: false },
-                  ].map((donor, idx) => (
-                    <motion.div
-                      key={donor.name}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + idx * 0.15 }}
-                      className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
-                        donor.top
-                          ? 'bg-gradient-to-r from-primary-50 to-red-50/60 border-primary-200 shadow-sm'
-                          : 'bg-slate-50/70 border-slate-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                          donor.top ? 'bg-primary-600 shadow-md shadow-primary-600/30' : 'bg-slate-400'
-                        }`}>
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-bold text-slate-900">{donor.name}</p>
-                            {donor.top && (
-                              <span className="px-2 py-0.5 bg-primary-600 text-white text-[10px] font-black rounded-md">
-                                #1 TOP
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500">{donor.level} · {donor.dist}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-base font-black ${donor.top ? 'text-primary-600' : 'text-slate-700'}`}>
-                          {donor.score}%
-                        </p>
-                        <p className="text-[10px] text-slate-400">Match Score</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Telemetry pill */}
-                <div className="p-3.5 bg-teal-50 rounded-2xl border border-teal-200/80 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-teal-600" />
-                    <div>
-                      <p className="text-xs font-bold text-teal-900">Verified Cold-Chain Route</p>
-                      <p className="text-[11px] text-teal-700">Temp: 3.8°C (Optimal: 2-6°C)</p>
-                    </div>
+                <div className="mt-4 bg-white rounded-3xl p-5 shadow-xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="px-3 py-1 bg-red-50 text-primary-700 text-xs font-black rounded-full flex items-center gap-1.5">
+                      <HandHeart className="w-3.5 h-3.5" />
+                      Give someone another tomorrow
+                    </span>
+                    <span className="text-xs text-slate-500 font-semibold">1 donor · 8 lives</span>
                   </div>
-                  <span className="text-xs font-black text-teal-800 bg-white px-2.5 py-1 rounded-lg border border-teal-200">
-                    ETA: 18m
-                  </span>
+                  <p className="text-sm text-slate-600 italic leading-relaxed">
+                    “To the world you may be one person, but to a patient awaiting a donor, you are the entire world.”
+                  </p>
+                  <Link
+                    to="/auth?mode=signup&role=individual"
+                    className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl text-sm"
+                  >
+                    Pledge organs or donate blood
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
             </motion.div>
@@ -323,81 +285,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Gamification & Retention Engine Highlight */}
-      <section className="py-20 bg-white border-b border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
-                Retention Engine
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-3 mb-6">
-                Why Gamification Solves Donor Drop-Off
-              </h2>
-              <p className="text-slate-600 leading-relaxed mb-6 text-base">
-                Over 70% of first-time donors never return. LifeLink solves donor inactivity with a meaningful, life-affirming gamification model:
-              </p>
-
-              <div className="space-y-4">
-                {[
-                  { title: 'Tiered Lifesaver Levels', desc: 'Progress from Bronze to Silver, Gold, and Platinum Lifesaver with every verified donation.', icon: Award, color: 'text-amber-600' },
-                  { title: 'Unlockable Milestone Badges', desc: 'Celebrate First Pledge, Universal Donor, and 3x Blood Hero achievements on your profile.', icon: Sparkles, color: 'text-teal-600' },
-                  { title: 'City-Wise Friendly Leaderboards', desc: 'Inspire friends and city communities to climb rankings while saving lives together.', icon: Users, color: 'text-blue-600' },
-                ].map((feat) => {
-                  const Icon = feat.icon;
-                  return (
-                    <div key={feat.title} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                      <div className={`p-2.5 rounded-xl bg-white shadow-sm ${feat.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900 text-sm sm:text-base">{feat.title}</h4>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">{feat.desc}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-              <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-600/20 rounded-full blur-3xl" />
-              <h3 className="text-xl font-black mb-6 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-teal-400" />
-                Explainable & Tamper-Proof Allocations
-              </h3>
-
-              <div className="space-y-4 text-sm">
-                <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                  <p className="text-xs text-slate-300 font-semibold mb-1">Mathematical Fairness Formula</p>
-                  <code className="text-primary-300 font-mono text-xs sm:text-sm">
-                    Score = 0.5×Compat + 0.3×Proximity + 0.2×Reliability
-                  </code>
-                </div>
-
-                <div className="p-4 bg-white/10 rounded-2xl border border-white/10">
-                  <p className="text-xs text-slate-300 font-semibold mb-1">Cryptographic Ledger</p>
-                  <p className="text-xs text-slate-200">
-                    Every allocation generates an immutable SHA-256 hash verified by both the hospital and regulatory nodes to eliminate favoritism.
-                  </p>
-                </div>
-
-                <div className="pt-2">
-                  <Link
-                    to="/transparency"
-                    className="inline-flex items-center gap-2 text-teal-300 hover:text-teal-200 font-bold text-sm"
-                  >
-                    Explore live transparency ledger <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials / Impact Section */}
-      <section className="py-20 bg-slate-50 border-b border-slate-200/60">
+      <section className="py-20 bg-white border-b border-slate-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="text-xs font-bold uppercase tracking-widest text-primary-600 bg-primary-50 px-3 py-1 rounded-full border border-primary-200/60">
@@ -419,11 +308,11 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/80 flex flex-col justify-between"
+                className="bg-slate-50 rounded-3xl p-8 shadow-sm border border-slate-200/80 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center gap-3.5 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl">
                       {t.image}
                     </div>
                     <div>
